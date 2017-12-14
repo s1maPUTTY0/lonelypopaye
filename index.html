@@ -1,0 +1,177 @@
+<!doctype html>
+<html>
+<meta charset="utf-8">
+  <head>
+    <title>Socket.IO chat</title>
+    <style>
+     /**{ margin: 0; padding: 0; box-sizing: border-box; }
+      body { font: 13px Helvetica, Arial; }
+      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages li { padding: 5px 10px; }
+      #messages li:nth-child(odd) { background: #eee; }
+    */
+        div {
+          border: solid 8px red;
+          box-sizing: border-box;
+
+          text-align: center;
+          line-height: 10px;
+          font-weight: bold;
+          font-size: 14px;
+        }
+        
+        .login_user {
+            float: left;
+            border-color: yellow;
+            width: 50%;  /** 横幅50% **/
+            height: 50%;
+            line-height: 10px;
+        }
+        
+        .main_game {
+            float: left;
+            border-color: yellow;
+            width: 50%;  /** 横幅50% **/
+            height: 50%;
+            line-height: 20px;
+        }
+        
+        .boxA {
+            border: none;
+            &:after {
+                content: "";
+                display: block;
+                clear: both;
+            }
+        }       
+        
+    </style>
+  </head>
+  <body>
+      <div class="box1">
+          
+          <form action="" id="login">
+              username:<input id="username" autocomplete="off"/>
+              <button type="submit" class="submit" id="login">login!</button>                          
+          </form>
+          
+          <form action="" id="logout">
+              <button type="submit" class="submit" id="logout">logout!</button>
+          </form>
+          
+          <form action="" id="chat" >
+              コメント：<input id="msg" autocomplete="off" /><button>Send</button>
+          </form>
+          
+      </div>
+      <div class="boxA">
+        <div class="login_user">
+            login_user:
+            <ul id="logins"></ul>
+        </div>
+        <div class="main_game">
+            main_game:
+            <ul id="messages"></ul>
+        </div>
+      </div>
+        <div class="box4">box4</div>
+    
+    
+    
+    <script src="https://code.jquery.com/jquery-3.1.1.slim.js"   integrity="sha256-5i/mQ300M779N2OVDrl16lbohwXNUdzL/R2aVUXyXWA="   crossorigin="anonymous"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        
+        $(function(){
+            //クッキーの値の取得
+            function getCookie (key){
+               var cookie,
+                   cookies = document.cookie.split(";");
+               for(var i = 0;i<cookies.length;i++){
+                   cookie = cookies[i].split("=");
+                   if(cookie[1]===key){
+                       /*console.log('last' + cookie[1]);*/
+                       return cookie[1];
+                   } else if(cookie[0]===' username'){
+                       return cookie[1];
+                   }
+               }
+            }
+            //クッキーのkeyの取得
+            function getCookiekey (key){
+               var cookie,
+                   cookies = document.cookie.split(";");
+               for(var i = 0;i<cookies.length;i++){
+                   cookie = cookies[i].split("=");
+                   if(cookie[0]===' ' + key){
+                       return cookie[0];
+                   }
+               }
+            }
+            
+            //ソケットIO起動
+            var socket = io();
+            socket.on('news', function (data) {
+                console.log(data);
+            });
+            //login_user表示
+            socket.on('UNhyouji', function (data) {
+                $('#logins').append($('<li>').text(data));
+                console.log(data);
+            });
+            socket.on('UNtuika', function (data) {
+                $('#logins').append($('<li>').text(data));
+                console.log(data);
+            });
+            //login_user削除
+            socket.on('UNsakujo', function (data) {
+                $('li:contains(' + data +')').remove();
+                console.log(data);
+            });
+            //チャットメッセージ送信
+            $('#chat').submit(() => {
+                socket.emit('chat message', $('#msg').val());
+                console.log('send message');
+                $('#msg').val('');
+                return false;
+            });
+            //ユーザー名送信
+            $('#login').submit(() => {
+                //ユーザー名のクッキーを保存
+                if(getCookiekey('username') == null ){
+                    document.cookie = 'username =' + encodeURIComponent($('#username').val()) + '; max-age =' + 24*60*60;
+                    //入力された値をサーバーに送信
+                    socket.emit('username',$('#username').val());
+                    console.log('クッキーに'　+ $('#username').val() + 'が保存されました');
+                } else {
+                    window.alert(getCookie('username')+' でログイン中です');
+                }
+                return false;
+            });
+            
+            //ログアウト処理
+            $('#logout').submit(() => {
+                //ユーザー名のクッキーを削除
+                if(getCookie($('#username').val()) === $('#username').val()){
+                    socket.emit('deleteUN',getCookie($('#username').val()));
+                    window.alert(getCookie('username')+' がログアウトしました');
+                    document.cookie = 'username =' + encodeURIComponent($('#username').val()) + '; max-age =' + -1;
+                    console.log('クッキー：'　+ $('#username').val() + 'を削除しました');
+                }
+                return false;
+            })
+            
+            socket.on('chat message', (msg) => {
+                $('#messages').append($('<li>').text(msg));
+                console.log('get messages');
+            });
+            
+        })
+       
+        
+    </script>
+  </body>
+</html>

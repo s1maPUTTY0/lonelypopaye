@@ -1,0 +1,23 @@
+{
+  "name": "socketex",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.16.2",
+    "js.cookie": "0.0.4",
+    "moment": "^2.19.2",
+    "mongodb": "^2.2.33",
+    "mongoose": "^4.4.9",
+    "socket.io": "^2.0.4",
+  }
+  "engines": {
+    "node": "0.8.19",
+    "npm":  "1.2.10"
+  }
+}
