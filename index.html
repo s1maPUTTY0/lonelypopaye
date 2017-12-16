@@ -58,7 +58,10 @@
                 display: block;
                 clear: both;
             }
-        }       
+        } 
+        ul {
+            padding-left: 15%;
+        }
         
     </style>
   </head>
@@ -220,11 +223,9 @@
             });
             //チャットメッセージ受信
             socket.on('chat message', (msg) => {
-                $('#messages').append($('<li>').text(msg));
+                $('#messages').append($('<li>').text(getCookie('username') + ':' + msg));
                 console.log('get messages');
-            });
-            
-            
+            });      
             
         })
        
