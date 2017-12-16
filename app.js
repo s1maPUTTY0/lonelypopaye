@@ -12,7 +12,9 @@ const PORT = process.env.PORT || 8080/*3000*/;
 app.get(`/`, (req, res) => {
     res.sendFile(__dirname + '/index.html',);
 });
-
+app.get(`/note.html`, (req, res) => {
+    res.sendFile(__dirname + '/note.html',);
+});
 //mongoose スキーマの設定
 var sch = mongoose.Schema;
 
