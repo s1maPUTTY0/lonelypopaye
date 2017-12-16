@@ -68,7 +68,7 @@ var UNID = function(username){
             console.log(docs[0]);
             userID = docs[0]._id;
             console.log(userID);
-            resolve(userID); 
+            resolve([username,userID]);
         });
     });
 };
@@ -82,12 +82,11 @@ io.on('connection', (socket) => {
     DBusername.find({}, function(err, result) {
         if (err) throw err
         for(var i=0;i<result.length;i++){
-            console.log(result[i].username);
-            UNID(result[i].username).then(function(userID){
-                console.log(userID + '表示');
-                var Result = result[i].username;
-                var ID =　userID;
-                socket.emit('UNhyouji',[Result,ID]);
+            console.log(result[i].username + '  85name');
+            UNID(result[i].username).then(function(data){
+                console.log(data[0] + '表示');
+                console.log(data[1] + '表示');
+                socket.emit('UNhyouji',data);
             });
         };
     });
