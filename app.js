@@ -5,7 +5,7 @@ const fs = require('fs');
 var moment = require('moment');
 const mongoose = require('mongoose');
 const cookie = require('js.cookie');
-const Promise = require('bluebird');
+/*const Promise = require('bluebird');*/
 
 
 const PORT = process.env.PORT || 8080/*3000*/;
