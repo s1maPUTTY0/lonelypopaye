@@ -14,7 +14,7 @@
       #messages li:nth-child(odd) { background: #eee; }
     */
         div {
-          border: solid 8px red;
+          border: solid 4px red;
           box-sizing: border-box;
 
           text-align: center;
@@ -26,7 +26,7 @@
         .login_user {
             float: left;
             border-color: yellow;
-            width: 50%;  /** 横幅50% **/
+            width: 20%;  /** 横幅50% **/
             height: 50%;
             line-height: 10px;
         }
@@ -34,7 +34,14 @@
         .main_game {
             float: left;
             border-color: yellow;
-            width: 50%;  /** 横幅50% **/
+            width: 60%;  /** 横幅50% **/
+            height: 50%;
+            line-height: 20px;
+        }
+        .chat_space {
+            float: left;
+            border-color: yellow;
+            width: 20%;  /** 横幅50% **/
             height: 50%;
             line-height: 20px;
         }
@@ -55,18 +62,17 @@
       <a href="note.html">リリースノート</a>
       <div class="box1">
           
-          <form action="" id="login">
-              username:<input id="username" autocomplete="off"/>
-              <button type="submit" class="submit" id="login">login!</button>                          
-          </form>
+          <div style="display:inline-flex">
+              <form action="" id="login">
+                  username（半角英数字のみでお願いします）:<input id="username" autocomplete="off"/>
+                  <button type="submit" class="submit" id="login">login!</button>                          
+              </form>
+
+              <form action="" id="logout">
+                  <button type="submit" class="submit" id="logout">logout!</button>
+              </form>
+          </div>
           
-          <form action="" id="logout">
-              <button type="submit" class="submit" id="logout">logout!</button>
-          </form>
-          
-          <form action="" id="chat" >
-              コメント：<input id="msg" autocomplete="off" /><button>Send</button>
-          </form>
           
       </div>
       <div class="boxA">
@@ -76,7 +82,14 @@
         </div>
         <div class="main_game">
             main_game:
-            <ul id="messages"></ul>
+            
+        </div>
+          <div class="chat_space">
+              <form action="" id="chat" >
+              コメント：<input id="msg" autocomplete="off" /><button>Send</button>
+              </form>
+                massage(ブラウザ更新で消えます）:
+              <ul id="messages"></ul>
         </div>
       </div>
         <div class="box4">box4</div>
