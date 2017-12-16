@@ -83,9 +83,9 @@ io.on('connection', (socket) => {
         if (err) throw err
         for(var i=0;i<result.length;i++){
             console.log(result[i].username);
-            var Result = result[i].username;
             UNID(result[i].username).then(function(userID){
                 console.log(userID + '表示');
+                var Result = result[i].username;
                 var ID =　userID;
                 socket.emit('UNhyouji',[Result,ID]);
             });
