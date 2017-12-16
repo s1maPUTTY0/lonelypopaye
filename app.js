@@ -101,9 +101,9 @@ io.on('connection', (socket) => {
         //ユーザー名をDBに登録する（未実装）
         UNtouroku(username).then(function(){
             UNID(username).then(function(userID){
-                console.log(userID + '処理終わり');
-                socket.emit('IDtuika',userID);
-                io.emit('UNtuika',[username,userID]);
+                console.log(userID[1] + '処理終わり');
+                socket.emit('IDtuika',userID[1]);
+                io.emit('UNtuika',userID);
             });
         });
         
