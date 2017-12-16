@@ -5,6 +5,8 @@ const fs = require('fs');
 var moment = require('moment');
 const mongoose = require('mongoose');
 const cookie = require('js.cookie');
+const Promise = require('bluebird');
+
 
 const PORT = process.env.PORT || 8080/*3000*/;
 
@@ -39,36 +41,54 @@ mongoose.connection.on( 'error', function(err){
 
 //username登録
 var UNtouroku = function(username){
-    var UN = new DBusername();
-        
-    UN.username = username;
-        
-    UN.save(function(err){
-        if(err) console.log(err);
-        console.log(username + '登録完了');
+    return new Promise(function(resolve, reject) {
+        var UN = new DBusername();    
+        UN.username = username;    
+        UN.save(function(err){
+            if(err) console.log(err);
+            console.log(username + '登録完了');
+        });
+        resolve(true);
     });
-
 }; 
 
 //username削除
-var UNdelete = function(username){
-    DBusername.remove({username: username},function(err){
+var UNdelete = function(userID){
+    DBusername.remove({_id: userID},function(err){
         if(err) console.log(err);
-        console.log(username + '削除完了');
+        console.log(userID + '削除完了');
     });  
+};
+
+var UNID = function(username){
+    var userID;
+    return new Promise(function(resolve, reject) {
+        DBusername.find({username: username},function(err,docs){
+            if(err) console.log(err);
+            console.log(docs[0]);
+            userID = docs[0]._id;
+            console.log(userID);
+            resolve(userID); 
+        });
+    });
 };
 
 
 io.on('connection', (socket) => {
     
     console.log('a user connected');
-    
+    //socket.io起動確認
     socket.emit('news', 'hello world');
     DBusername.find({}, function(err, result) {
-        if (err) throw err;
+        if (err) throw err
         for(var i=0;i<result.length;i++){
             console.log(result[i].username);
-            socket.emit('UNhyouji',result[i].username);
+            var Result = result[i].username;
+            UNID(result[i].username).then(function(userID){
+                console.log(userID + '表示');
+                var ID =　userID;
+                socket.emit('UNhyouji',[Result,ID]);
+            });
         };
     });
     
@@ -78,18 +98,26 @@ io.on('connection', (socket) => {
         io.emit('chat message', msg);
     });
     
-    socket.on('username',(username) => {
+    socket.on('userLOGIN',(username) => {
         //ユーザー名をDBに登録する（未実装）
-        UNtouroku(username);        
-        io.emit('UNtuika',username);
+        UNtouroku(username).then(function(){
+            UNID(username).then(function(userID){
+                console.log(userID + '処理終わり');
+                socket.emit('IDtuika',userID);
+                io.emit('UNtuika',[username,userID]);
+            });
+        });
+        
+        
         //ユーザーがログインした日時をコンソールに表示
         var createdAt = moment().format('YYYY-MM-DD HH:mm:ss');
         console.log(createdAt + "  " + username + "  がログインしました"  );
     });
     
-    socket.on('deleteUN',(UN) => {
-        io.emit('UNsakujo',UN);
-        UNdelete(UN);
+    socket.on('deleteUN',(userID) => {
+        console.log(userID +'110');
+        io.emit('UNsakujo',userID);
+        UNdelete(userID);
     });
 
 });

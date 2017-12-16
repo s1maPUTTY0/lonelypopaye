@@ -82,23 +82,26 @@
       <div class="boxA">
           
         <div class="login_user">
-            login_user:
+            login_users:
             <ul id="logins"></ul>
         </div>
           
         <div class="main_game">
-            main_game:          
+            <form action="" id="join">
+                  <button type="submit" class="submit" id="join">JOIN</button>
+            </form>
+            main_game:
+            <ul id="join_members"></ul>
         </div>
           
         <div class="chat_space">
             <form action="" id="chat" >
                 コメント：<input id="msg" autocomplete="off" /><button>Send</button>
             </form>
-            massage(ブラウザ更新で消えます）:
+            massage(ブラウザ更新で消えます):
             <ul id="messages"></ul>
         </div>
       </div>
-        <div class="box4">box4</div>
     
     
     
@@ -113,10 +116,13 @@
                    cookies = document.cookie.split(";");
                for(var i = 0;i<cookies.length;i++){
                    cookie = cookies[i].split("=");
+                   console.log(key);
+                   console.log(cookie);
+                   
                    if(cookie[1]===key){
                        /*console.log('last' + cookie[1]);*/
                        return cookie[1];
-                   } else if(cookie[0]==='username'){
+                   } else if(cookie[0]===key || cookie[0]===' '+key){
                        return cookie[1];
                    }
                }
@@ -138,26 +144,38 @@
             socket.on('news', function (data) {
                 console.log(data);
             });
+            
+            //---------メインゲーム関連スペース------------
+            $('#join').submit(() => {
+                var data = getCookie($('#username').val());
+                if(data == null){                    
+                    window.alert('ログインしてください'); 
+                } else {
+                    $('#join_members').append($('<li>').text(data));
+                    console.log(data);
+                    window.alert('JOINしました');
+                }
+                return false;
+            });
+            
+            //---------ログイン関連スペース------------
             //login_user表示
             socket.on('UNhyouji', function (data) {
-                $('#logins').append($('<li>').text(data));
+                $('#logins').append($('<li id = ' + data[1] + '>').text(data[0]));
                 console.log(data);
             });
             socket.on('UNtuika', function (data) {
-                $('#logins').append($('<li>').text(data));
+                $('#logins').append($('<li id = ' + data[1] + '>').text(data[0]));
                 console.log(data);
             });
             //login_user削除
             socket.on('UNsakujo', function (data) {
-                $('li:contains(' + data +')').remove();
-                console.log(data);
+                $('#' + data).remove();
+                console.log(data +'を検出して削除しました');
             });
-            //チャットメッセージ送信
-            $('#chat').submit(() => {
-                socket.emit('chat message', $('#msg').val());
-                console.log('send message');
-                $('#msg').val('');
-                return false;
+            //userID追加
+            socket.on('IDtuika',function(data){
+                document.cookie = 'userID =' + encodeURIComponent(data) + '; max-age =' + 24*60*60;
             });
             //ユーザー名送信
             $('#login').submit(() => {
@@ -165,7 +183,7 @@
                 if(getCookiekey('username') == null ){
                     document.cookie = 'username =' + encodeURIComponent($('#username').val()) + '; max-age =' + 24*60*60;
                     //入力された値をサーバーに送信
-                    socket.emit('username',$('#username').val());
+                    socket.emit('userLOGIN',$('#username').val());
                     console.log('クッキーに'　+ $('#username').val() + 'が保存されました');
                 } else {
                     window.alert(getCookie('username')+' でログイン中です');
@@ -175,20 +193,37 @@
             
             //ログアウト処理
             $('#logout').submit(() => {
-                //ユーザー名のクッキーを削除
+                //ユーザー名,ユーザーIDのクッキーを削除
                 if(getCookie($('#username').val()) === $('#username').val()){
-                    socket.emit('deleteUN',getCookie($('#username').val()));
+                    //ユーザーをDBから削除
+                    socket.emit('deleteUN',getCookie('userID'));
+                    console.log(getCookie('userID'));
                     window.alert(getCookie('username')+' がログアウトしました');
+                    //ユーザー名,ユーザーIDのクッキーを削除
                     document.cookie = 'username =' + encodeURIComponent($('#username').val()) + '; max-age =' + -1;
+                    document.cookie = 'userID =' + encodeURIComponent(getCookie('userID')) + '; max-age =' + -1;
+                    
                     console.log('クッキー：'　+ $('#username').val() + 'を削除しました');
                 }
                 return false;
-            })
+            });
             
+            
+            //---------チャット関連スペース------------
+            //チャットメッセージ送信
+            $('#chat').submit(() => {
+                socket.emit('chat message', $('#msg').val());
+                console.log('send message');
+                $('#msg').val('');
+                return false;
+            });
+            //チャットメッセージ受信
             socket.on('chat message', (msg) => {
                 $('#messages').append($('<li>').text(msg));
                 console.log('get messages');
             });
+            
+            
             
         })
        
