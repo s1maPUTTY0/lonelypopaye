@@ -142,7 +142,7 @@
                    cookies = document.cookie.split(";");
                for(var i = 0;i<cookies.length;i++){
                    cookie = cookies[i].split("=");
-                   if(cookie[0]=== key){
+                   if(cookie[0]===key || cookie[0]===' '+key){
                        return cookie[0];
                    }
                }
@@ -159,14 +159,19 @@
             
             //=========メインゲーム：イベント=============
             $('#join').submit(() => {
-                var data = getCookie($('#username').val());
-                if(data == null){                    
-                    window.alert('ログインしてください'); 
-                } else if(join_count >= 10){
-                    window.alert('満員です');                          
+                if(getCookiekey('roomID') == null ){
+                    console.log(getCookiekey('roomID'));
+                    var data = getCookie($('#username').val());
+                    if(data == null){                    
+                        window.alert('ログインしてください'); 
+                    } else if(join_count >= 10){
+                        window.alert('満員です');                          
+                    } else {
+                        window.alert('JOINしました');
+                        socket.emit('join',{count:join_count,username:$('#username').val()});   
+                    }
                 } else {
-                    window.alert('JOINしました');
-                    socket.emit('join',{count:join_count,username:$('#username').val()});   
+                    window.alert('JOIN中です');
                 }
                 return false;
             });
@@ -248,18 +253,24 @@
             
             //ログアウト処理
             $('#logout').submit(() => {
-                //ユーザー名,ユーザーIDのクッキーを削除
-                if(getCookie($('#username').val()) === $('#username').val()){
-                    //ユーザーをDBから削除
-                    socket.emit('deleteUN',getCookie('userID'));
-                    console.log(getCookie('userID'));
-                    window.alert(getCookie('username')+' がログアウトしました');
+                if(getCookiekey('roomID') == null ){
+                    console.log(getCookiekey('roomID'));
                     //ユーザー名,ユーザーIDのクッキーを削除
-                    document.cookie = 'username =' + encodeURIComponent($('#username').val()) + '; max-age =' + -1;
-                    document.cookie = 'userID =' + encodeURIComponent(getCookie('userID')) + '; max-age =' + -1;
-                    
-                    console.log('クッキー：'　+ $('#username').val() + 'を削除しました');
+                    if(getCookie($('#username').val()) === $('#username').val()){
+                        //ユーザーをDBから削除
+                        socket.emit('deleteUN',getCookie('userID'));
+                        console.log(getCookie('userID'));
+                        window.alert(getCookie('username')+' がログアウトしました');
+                        //ユーザー名,ユーザーIDのクッキーを削除
+                        document.cookie = 'username =' + encodeURIComponent($('#username').val()) + '; max-age =' + -1;
+                        document.cookie = 'userID =' + encodeURIComponent(getCookie('userID')) + '; max-age =' + -1;
+
+                        console.log('クッキー：'　+ $('#username').val() + 'を削除しました');
+                    }
+                } else {
+                    window.alert('EXITしてください');
                 }
+                
                 return false;
             });
             
