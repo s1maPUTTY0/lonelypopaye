@@ -159,8 +159,7 @@
             
             //=========メインゲーム：イベント=============
             $('#join').submit(() => {
-                if(getCookiekey('roomID') == null ){
-                    console.log(getCookiekey('roomID'));
+                if(getCookiekey('joinID') == null ){
                     var data = getCookie($('#username').val());
                     if(data == null){                    
                         window.alert('ログインしてください'); 
@@ -168,7 +167,7 @@
                         window.alert('満員です');                          
                     } else {
                         window.alert('JOINしました');
-                        socket.emit('join',{count:join_count,username:$('#username').val()});   
+                        socket.emit('join',{username:$('#username').val()});   
                     }
                 } else {
                     window.alert('JOIN中です');
@@ -176,10 +175,10 @@
                 return false;
             });
             $('#exit').submit(() => {
-                if(join_count >= 0){
+                if(getCookiekey('joinID') !== null){
                     window.alert('EXITしました');
-                    $('#' + getCookie('joinID') + getCookie('roomID')).remove();
-                    socket.emit('exit', {roomID:getCookie('roomID'),joinID:getCookie('joinID')});                         
+                    $('#' + getCookie('joinID')).remove();
+                    socket.emit('exit', {joinID:getCookie('joinID')});                         
                 }
                 return false;
             });
@@ -189,31 +188,22 @@
                 join_count = join;
                 $('#member_count').text('現在の参加者'　+　join_count + '名')
             });
-            //ルームIDのクッキー保存
-            socket.on('roomIDsend', (roomID) => {
-                document.cookie = 'roomID =' + encodeURIComponent(roomID) + '; max-age =' + 24*60*60;
-                console.log(roomID + 'ルームID追加');
-            });
             //JOINユーザー表示
             socket.on('JOINhyouji', function (data) {
-                $('#join_members').append($('<li id = ' + getCookie('joinID') + getCookie('roomID') + '>').text(data.ID + ':' + data.username));
+                $('#join_members').append($('<li id = ' + getCookie('joinID') + '>').text(data));
             });
             //JOINユーザー追加
             socket.on('JOINUNtuika', function (data) {
-                $('#join_members').append($('<li id = ' + data.joinID + data.ID + '>').text(data.ID + ':' + data.username));
+                $('#join_members').append($('<li id = ' + data.joinID + '>').text(data.username));
                 console.log(data + 'JOINユーザー追加');
             });
             //JOINID追加
             socket.on('JOINIDtuika', (joinID) => {
                 document.cookie = 'joinID =' + encodeURIComponent(joinID) + '; max-age =' + 24*60*60;
             });
-            //roomID削除
-            socket.on('leave_room', (roomID) => {
-                document.cookie = 'roomID =' + encodeURIComponent(roomID) + '; max-age =' + -1;
-            });
             //join表示、joinID削除
             socket.on('JOINUNsakujo', function (data) {
-                $('#' + data.joinID + data.roomID).remove();
+                $('#' + data).remove();
                 document.cookie = 'joinID =' + encodeURIComponent(data) + '; max-age =' + -1;
                 console.log(data +'を検出して削除しました:JOIN');
             });
@@ -253,7 +243,7 @@
             
             //ログアウト処理
             $('#logout').submit(() => {
-                if(getCookiekey('roomID') == null ){
+                if(getCookiekey('joinID') == null ){
                     console.log(getCookiekey('roomID'));
                     //ユーザー名,ユーザーIDのクッキーを削除
                     if(getCookie($('#username').val()) === $('#username').val()){
