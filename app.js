@@ -24,8 +24,13 @@ var usernameSchema = new sch(
     {username: String},
     {collection:'user'}
 );
+var join_userSchema = new sch(
+    {ID: Number,username: String},
+    {collection:'join_user'}
+);
 
 var DBusername = mongoose.model('user', usernameSchema);
+var DBjoin_user = mongoose.model('join_user', join_userSchema);
 
 //databaseへの接続
 /*mongoose.connect('mongodb://192.168.33.10/database');*/
@@ -38,7 +43,7 @@ mongoose.connection.on( 'connected', function(){
 mongoose.connection.on( 'error', function(err){
     console.log( 'failed to connect a mongo db : ' + err );
 });
-
+//================LOGIN====================
 //username登録
 var UNtouroku = function(username){
     return new Promise(function(resolve, reject) {
@@ -47,11 +52,10 @@ var UNtouroku = function(username){
         UN.save(function(err){
             if(err) console.log(err);
             console.log(username + '登録完了');
+            resolve(true);
         });
-        resolve(true);
     });
 }; 
-
 //username削除
 var UNdelete = function(userID){
     DBusername.remove({_id: userID},function(err){
@@ -67,11 +71,53 @@ var UNID = function(username){
             if(err) console.log(err);
             console.log(docs[0]);
             userID = docs[0]._id;
-            console.log(userID);
             resolve([username,userID]);
         });
     });
 };
+//================JOIN====================
+//username登録
+var JOINUNtouroku = function(data){
+    return new Promise(function(resolve, reject) {
+        var UN = new DBjoin_user();    
+        UN.username = data.username; 
+        UN.ID = data.ID;
+        UN.save(function(err){
+            if(err) console.log(err);
+            console.log(data.username + '登録完了' + data.ID);
+            resolve(true);
+        });
+    });
+}; 
+
+//username削除
+var JOINUNdelete = function(userID){
+    return new Promise(function(resolve, reject) {
+        DBjoin_user.remove({_id: userID},function(err){
+            if(err) console.log(err);
+            console.log(userID + '削除完了:JOIN');
+            resolve(true);
+        });    
+    });
+};
+
+var JOINUNID = function(data){
+    var ID,
+        UN,
+        joinID;
+    return new Promise(function(resolve, reject) {
+        DBjoin_user.find({ID: data.ID},function(err,docs){
+            if(err) console.log(err);
+            console.log(docs[0]);
+            ID = docs[0].ID;
+            UN = docs[0].username;
+            joinID = docs[0]._id;
+            resolve([ID,UN,joinID]);
+        });
+    });
+};
+
+
 
 
 io.on('connection', (socket) => {
@@ -82,7 +128,7 @@ io.on('connection', (socket) => {
     DBusername.find({}, function(err, result) {
         if (err) throw err
         for(var i=0;i<result.length;i++){
-            console.log(result[i].username + '  85name');
+            console.log(result[i].username + '  LOGIN');
             UNID(result[i].username).then(function(data){
                 console.log(data[0] + '表示');
                 console.log(data[1] + '表示');
@@ -90,31 +136,85 @@ io.on('connection', (socket) => {
             });
         };
     });
+    DBjoin_user.find({}, function(err, result) {
+        if (err) throw err
+        socket.emit('join_count', result.length);
+        var JOIN = {};
+        for(var i=0;i<result.length;i++){
+            console.log(result[i].ID + ':' + result[i].username + '  JOIN');
+            JOINUNID({ID:result[i].ID,username:result[i].username}).then(function(data){
+                console.log(data[0] + '表示:ID');
+                console.log(data[1] + '表示');
+                var dataID = data[0];
+                var username = data[1];
+                JOIN = {ID:dataID,username:username};
+                socket.emit('JOINhyouji',JOIN);
+            });
+        };
+    });
+    //================メインゲーム====================
+    socket.on('join', (data) => {
+        var roomID = String(data.count);
+        var UNID = {username:data.username,ID:data.count};
+        JOINUNtouroku(UNID).then((i) => {
+            if(i){
+                JOINUNID(UNID).then((finddata) => {
+                    socket.emit('JOINIDtuika',finddata[2]);
+                    io.emit('JOINUNtuika',{ID:finddata[0],username:finddata[1],joinID:finddata[2]});
+                });
+                DBjoin_user.find({}, function(err, result) {
+                    if (err) throw err
+                    socket.emit('join_count', result.length);
+                });
+            }            
+        });
+        socket.emit('roomIDsend', roomID);
+        
+    });
+    socket.on('exit', (data) => {
+        socket.leave(data.roomID);
+        io.emit('JOINUNsakujo',{roomID:data.roomID,joinID:data.joinID});
+        
+        socket.emit('leave_room', data.roomID);
+        JOINUNdelete(data.joinID).then((i) => {
+            DBjoin_user.find({}, function(err, result) {
+                if (err) throw err
+                socket.emit('join_count', result.length);
+            });
+        });
+        
+    });
     
+    //================チャット====================
     socket.on('chat message', (msg) => {
         //メッセージをクライアント全体に送信する
         console.log('message: ' + msg);
         io.emit('chat message', msg);
     });
-    
+    socket.on('private_chat message', (msg) => {
+        //メッセージをクライアント全体に送信する
+        console.log('ID' + msg[1] + 'private_message: ' + msg[0]);
+        console.log(socket.id);
+        socket.to(msg[1]).emit('chat message', msg[0]);
+    });
+    //================ログイン====================
     socket.on('userLOGIN',(username) => {
         //ユーザー名をDBに登録する（未実装）
-        UNtouroku(username).then(function(){
-            UNID(username).then(function(userID){
-                console.log(userID[1] + '処理終わり');
-                socket.emit('IDtuika',userID[1]);
-                io.emit('UNtuika',userID);
-            });
+        UNtouroku(username).then((i) => {
+            if(i){
+                UNID(username).then((userID) => {
+                    console.log(userID[1] + '処理終わり');
+                    socket.emit('IDtuika',userID[1]);
+                    io.emit('UNtuika',userID);
+                });
+            }                  
         });
-        
-        
         //ユーザーがログインした日時をコンソールに表示
         var createdAt = moment().format('YYYY-MM-DD HH:mm:ss');
         console.log(createdAt + "  " + username + "  がログインしました"  );
     });
     
     socket.on('deleteUN',(userID) => {
-        console.log(userID +'110');
         io.emit('UNsakujo',userID);
         UNdelete(userID);
     });

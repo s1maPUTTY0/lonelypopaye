@@ -66,7 +66,7 @@
     </style>
   </head>
   <body>
-      <H1>LonelyPopaye</H1>v0.0.2
+      <H1>LonelyPopaye</H1>v0.0.3
       <a href="note.html">リリースノート</a>
       <div class="box1">
           
@@ -91,9 +91,15 @@
         </div>
           
         <div class="main_game">
-            <form action="" id="join">
-                  <button type="submit" class="submit" id="join">JOIN</button>
-            </form>
+            <div style="display:inline-flex">
+                <form action="" id="join">
+                      <button type="submit" class="submit" id="join">JOIN</button>
+                </form>
+                <form action="" id="exit">
+                      <button type="submit" class="submit" id="exit">EXIT</button>
+                </form>
+            </div>
+            <li id = 'member_count'></li>
             main_game:
             <ul id="join_members"></ul>
         </div>
@@ -101,6 +107,9 @@
         <div class="chat_space">
             <form action="" id="chat" >
                 コメント：<input id="msg" autocomplete="off" /><button>Send</button>
+            </form>
+            <form action="" id="private_chat" >
+                プライベートコメント：<input id="private_msg" autocomplete="off" /><button>Send</button>
             </form>
             massage(ブラウザ更新で消えます):
             <ul id="messages"></ul>
@@ -119,12 +128,8 @@
                var cookie,
                    cookies = document.cookie.split(";");
                for(var i = 0;i<cookies.length;i++){
-                   cookie = cookies[i].split("=");
-                   console.log(key);
-                   console.log(cookie);
-                   
+                   cookie = cookies[i].split("=");                  
                    if(cookie[1]===key){
-                       /*console.log('last' + cookie[1]);*/
                        return cookie[1];
                    } else if(cookie[0]===key || cookie[0]===' '+key){
                        return cookie[1];
@@ -150,16 +155,62 @@
             });
             
             //---------メインゲーム関連スペース------------
+            var join_count;
+            
+            //=========メインゲーム：イベント=============
             $('#join').submit(() => {
                 var data = getCookie($('#username').val());
                 if(data == null){                    
                     window.alert('ログインしてください'); 
+                } else if(join_count >= 10){
+                    window.alert('満員です');                          
                 } else {
-                    $('#join_members').append($('<li>').text(data));
-                    console.log(data);
                     window.alert('JOINしました');
+                    socket.emit('join',{count:join_count,username:$('#username').val()});   
                 }
                 return false;
+            });
+            $('#exit').submit(() => {
+                if(join_count >= 0){
+                    window.alert('EXITしました');
+                    $('#' + getCookie('joinID') + getCookie('roomID')).remove();
+                    socket.emit('exit', {roomID:getCookie('roomID'),joinID:getCookie('joinID')});                         
+                }
+                return false;
+            });
+            //=========メインゲーム：ソケット=============
+            //参加人数取得
+            socket.on('join_count', (join) => {
+                join_count = join;
+                $('#member_count').text('現在の参加者'　+　join_count + '名')
+            });
+            //ルームIDのクッキー保存
+            socket.on('roomIDsend', (roomID) => {
+                document.cookie = 'roomID =' + encodeURIComponent(roomID) + '; max-age =' + 24*60*60;
+                console.log(roomID + 'ルームID追加');
+            });
+            //JOINユーザー表示
+            socket.on('JOINhyouji', function (data) {
+                $('#join_members').append($('<li id = ' + getCookie('joinID') + getCookie('roomID') + '>').text(data.ID + ':' + data.username));
+            });
+            //JOINユーザー追加
+            socket.on('JOINUNtuika', function (data) {
+                $('#join_members').append($('<li id = ' + data.joinID + data.ID + '>').text(data.ID + ':' + data.username));
+                console.log(data + 'JOINユーザー追加');
+            });
+            //JOINID追加
+            socket.on('JOINIDtuika', (joinID) => {
+                document.cookie = 'joinID =' + encodeURIComponent(joinID) + '; max-age =' + 24*60*60;
+            });
+            //roomID削除
+            socket.on('leave_room', (roomID) => {
+                document.cookie = 'roomID =' + encodeURIComponent(roomID) + '; max-age =' + -1;
+            });
+            //join表示、joinID削除
+            socket.on('JOINUNsakujo', function (data) {
+                $('#' + data.joinID + data.roomID).remove();
+                document.cookie = 'joinID =' + encodeURIComponent(data) + '; max-age =' + -1;
+                console.log(data +'を検出して削除しました:JOIN');
             });
             
             //---------ログイン関連スペース------------
@@ -223,9 +274,22 @@
             });
             //チャットメッセージ受信
             socket.on('chat message', (msg) => {
-                $('#messages').append($('<li>').text(getCookie('username') + ':' + msg));
+                $('#messages').prepend($('<li>').text(getCookie('username') + ':' + msg));
                 console.log('get messages');
-            });      
+            });
+            //プライベートメッセージ送信
+            $('#private_chat').submit(() => {
+                var msg = [$('#private_msg').val(),String(getCookie('roomID'))]
+                socket.emit('private_chat message', msg);
+                console.log('send private message');
+                $('#private_msg').val('');
+                return false;
+            });
+            //プライベートメッセージ受信
+            socket.on('private_chat message', (private_msg) => {
+                $('#messages').prepend($('<li>').text(getCookie('roomID') + ':' + getCookie('username') + ':' + private_msg));
+                console.log('get private messages');
+            });
             
         })
        
