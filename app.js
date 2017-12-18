@@ -164,7 +164,7 @@ io.on('connection', (socket) => {
                 });
                 DBjoin_user.find({}, function(err, result) {
                     if (err) throw err
-                    socket.emit('join_count', result.length);
+                    io.emit('join_count', result.length);
                 });
             }            
         });
@@ -179,7 +179,7 @@ io.on('connection', (socket) => {
         JOINUNdelete(data.joinID).then((i) => {
             DBjoin_user.find({}, function(err, result) {
                 if (err) throw err
-                socket.emit('join_count', result.length);
+                io.emit('join_count', result.length);
             });
         });
         
