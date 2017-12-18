@@ -173,7 +173,7 @@ io.on('connection', (socket) => {
     });
     socket.on('exit', (data) => {
         socket.leave(data.roomID);
-        io.emit('JOINUNsakujo',{roomID:data.roomID,joinID:data.joinID});
+        socket.emit('JOINUNsakujo',{roomID:data.roomID,joinID:data.joinID});
         
         socket.emit('leave_room', data.roomID);
         JOINUNdelete(data.joinID).then((i) => {
