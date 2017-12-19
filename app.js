@@ -92,11 +92,20 @@ var JOINUNtouroku = function(data){
 //username削除
 var JOINUNdelete = function(userID){
     return new Promise(function(resolve, reject) {
-        DBjoin_user.remove({_id: userID},function(err){
-            if(err) console.log(err);
-            console.log(userID + '削除完了:JOIN');
-            resolve(true);
-        });    
+        if(userID != null){
+            DBjoin_user.remove({_id: userID},function(err){
+                if(err) console.log(err);
+                console.log(userID + '削除完了:JOIN');
+                resolve(true);
+            });
+        } else {
+            DBjoin_user.remove({},function(err){
+                if(err) console.log(err);
+                console.log(userID + '全削除完了:JOIN');
+                resolve(true);
+            });
+        }
+            
     });
 };
 
@@ -174,18 +183,33 @@ io.on('connection', (socket) => {
             });
         });
     });
+    socket.on('Roll_Create', () => {
+        DBjoin_user.find({}, function(err, result) {
+            result.sort(function() {
+                return Math.random() - Math.random();
+            });
+            for(var i=0;i<result.length;i++){
+                console.log(result[i]);
+            };
+            console.log(result);
+            io.emit('Roll', result);
+        });
+    });
+    socket.on('Reset_All',() => {
+        io.emit('Reset')
+        JOINUNdelete().then((i) => {
+            DBjoin_user.find({}, function(err, result) {
+                if (err) throw err
+                io.emit('join_count', result.length);
+            });
+        });
+    });
     
     //================チャット====================
     socket.on('chat message', (msg) => {
         //メッセージをクライアント全体に送信する
         console.log('message: ' + msg);
         io.emit('chat message', msg);
-    });
-    socket.on('private_chat message', (msg) => {
-        //メッセージをクライアント全体に送信する
-        console.log('ID' + msg[1] + 'private_message: ' + msg[0]);
-        console.log(socket.id);
-        socket.to(msg[1]).emit('chat message', msg[0]);
     });
     //================ログイン====================
     socket.on('userLOGIN',(username) => {

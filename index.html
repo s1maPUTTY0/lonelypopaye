@@ -14,15 +14,17 @@
       #messages li:nth-child(odd) { background: #eee; }
     */
         div {
-          border: solid 4px red;
-          box-sizing: border-box;
+            border: solid 2px red;
+            
+            box-sizing: border-box;
 
-          line-height: 10px;
-          font-weight: bold;
-          font-size: 14px;
+            line-height: 10px;
+            font-weight: bold;
+            font-size: 14px;
         }
         
         .login_user {
+            border: solid 4px;
             float: left;
             border-color: yellow;
             width: 20%;  /** 横幅50% **/
@@ -33,7 +35,9 @@
         }
         
         .main_game {
+            position: relative;
             float: left;
+            border: solid 4px;
             border-color: yellow;
             
             text-align: center;
@@ -43,6 +47,7 @@
         }
         .chat_space {
             float: left;
+            border: solid 4px;
             border-color: yellow;
             width: 20%;  /** 横幅50% **/
             height: 50%;
@@ -62,11 +67,25 @@
         ul {
             padding-left: 15%;
         }
-        
+        .Reset_All{
+            position:absolute;
+            bottom:0px; left:0px;
+        }
+        .Start_Game{
+            position:absolute;
+            top:0px; right:0px;
+            float: right;
+        }
+        .SPY_count{
+            position:absolute;
+            top: auto;
+            right:0px;
+            
+        }
     </style>
   </head>
   <body>
-      <H1>LonelyPopaye</H1>v0.0.3
+      <H1>LonelyPopaye</H1>v0.0.4
       <a href="note.html">リリースノート</a>
       <div class="box1">
           
@@ -91,6 +110,19 @@
         </div>
           
         <div class="main_game">
+            <form class="Start_Game" action="" id="Start_Game">
+                <button type="submit" class="submit" id="Start_Game">Start_Game</button>
+            </form>
+            <div style="display: inline">スパイ人数</div>
+            <select name="SPY" id="SPY_count">
+                <option data-num="1">1</option>
+                <option data-num="2">2</option>
+                <option data-num="3">3</option>
+                <option data-num="4">4</option>
+            </select>
+            <form class="Reset_All" action="" id="Reset_All">
+                <button type="submit" class="submit" id="Reset_All">Reset_All</button>
+            </form>
             <div style="display:inline-flex">
                 <form action="" id="join">
                       <button type="submit" class="submit" id="join">JOIN</button>
@@ -107,9 +139,6 @@
         <div class="chat_space">
             <form action="" id="chat" >
                 コメント：<input id="msg" autocomplete="off" /><button>Send</button>
-            </form>
-            <form action="" id="private_chat" >
-                プライベートコメント：<input id="private_msg" autocomplete="off" /><button>Send</button>
             </form>
             massage(ブラウザ更新で消えます):
             <ul id="messages"></ul>
@@ -156,6 +185,11 @@
             
             //---------メインゲーム関連スペース------------
             var join_count;
+            var SPY_count;
+            $('#SPY_count').change(() => {
+                SPY_count = $('#SPY_count').val();
+                console.log(SPY_count);
+            });
             
             //=========メインゲーム：イベント=============
             $('#join').submit(() => {
@@ -166,8 +200,8 @@
                     } else if(join_count >= 10){
                         window.alert('満員です');                          
                     } else {
+                        socket.emit('join',{username:$('#username').val()});
                         window.alert('JOINしました');
-                        socket.emit('join',{username:$('#username').val()});   
                     }
                 } else {
                     window.alert('JOIN中です');
@@ -175,10 +209,30 @@
                 return false;
             });
             $('#exit').submit(() => {
-                if(getCookiekey('joinID') !== null){
-                    window.alert('EXITしました');
+                if(getCookiekey('joinID') != null){                    
                     $('#' + getCookie('joinID')).remove();
-                    socket.emit('exit', {joinID:getCookie('joinID')});                         
+                    socket.emit('exit', {joinID:getCookie('joinID')});
+                    window.alert('EXITしました');
+                }
+                return false;
+            });
+            $('#Start_Game').submit(() => {
+                if(getCookiekey('joinID') != null){
+                    if(join_count >= SPY_count){
+                        socket.emit('Roll_Create');
+                    } else if(SPY_count != null){
+                        window.alert( SPY_count +'人以上参加してください');
+                    } else {
+                        window.alert('スパイ人数を選択してください');
+                    }                 
+                }                
+                return false;
+            });
+            $('#Reset_All').submit(() => {
+                if(getCookiekey('joinID') != null){
+                    if(window.confirm('Resetしますか？(参加者全員が強制EXITします)')){
+                        socket.emit('Reset_All');
+                    }
                 }
                 return false;
             });
@@ -207,8 +261,65 @@
                 document.cookie = 'joinID =' + encodeURIComponent(data) + '; max-age =' + -1;
                 console.log(data +'を検出して削除しました:JOIN');
             });
+            socket.on('Roll', (Roll) => {
+                var joinID = getCookie('joinID');
+                var Roll_count;
+                for(var i=0;i<Roll.length;i++){
+                    if(joinID === Roll[i]._id){
+                        Roll_count = i;
+                        console.log(joinID + '  ' + Roll[i]._id)
+                        break;
+                    }
+                }
+                if(Roll_count < SPY_count){
+                    for(var i=0;i<SPY_count;i++){
+                        $('#' + Roll[i]._id).css('color','red');
+                        console.log(Roll[i] + 'SPYを表示しました');
+                    }
+                }
+            });
+            //Reset
+            socket.on('Reset',() => {
+                $('#' + getCookie('joinID')).remove();
+                document.cookie = 'joinID =' + getCookie('joinID') + '; max-age =' + -1;
+                location.reload();
+            });
             
             //---------ログイン関連スペース------------
+            //=========ログイン関連：イベント=============
+            //ユーザー名送信
+            $('#login').submit(() => {
+                //ユーザー名のクッキーを保存
+                if(getCookiekey('username') == null ){
+                    document.cookie = 'username =' + encodeURIComponent($('#username').val()) + '; max-age =' + 24*60*60;
+                    //入力された値をサーバーに送信
+                    socket.emit('userLOGIN',$('#username').val());
+                    console.log('クッキーに'　+ $('#username').val() + 'が保存されました');
+                } else {
+                    window.alert(getCookie('username')+' でログイン中です');
+                }
+                return false;
+            });
+            
+            //ログアウト処理
+            $('#logout').submit(() => {
+                if(getCookiekey('joinID') == null ){
+                    //ユーザーをDBから削除
+                    socket.emit('deleteUN',getCookie('userID'));
+                    console.log(getCookie('userID'));
+                    window.alert(getCookie('username')+' がログアウトしました');
+                    //ユーザー名,ユーザーIDのクッキーを削除
+                    document.cookie = 'username =' + encodeURIComponent($('#username').val()) + '; max-age =' + -1;
+                    document.cookie = 'userID =' + encodeURIComponent(getCookie('userID')) + '; max-age =' + -1;
+
+                    console.log('クッキー：'　+ $('#username').val() + 'を削除しました');
+                } else {
+                    window.alert('EXITしてください');
+                }
+                
+                return false;
+            });
+            //=========ログイン関連：ソケット=============
             //login_user表示
             socket.on('UNhyouji', function (data) {
                 $('#logins').append($('<li id = ' + data[1] + '>').text(data[0]));
@@ -227,43 +338,6 @@
             socket.on('IDtuika',function(data){
                 document.cookie = 'userID =' + encodeURIComponent(data) + '; max-age =' + 24*60*60;
             });
-            //ユーザー名送信
-            $('#login').submit(() => {
-                //ユーザー名のクッキーを保存
-                if(getCookiekey('username') == null ){
-                    document.cookie = 'username =' + encodeURIComponent($('#username').val()) + '; max-age =' + 24*60*60;
-                    //入力された値をサーバーに送信
-                    socket.emit('userLOGIN',$('#username').val());
-                    console.log('クッキーに'　+ $('#username').val() + 'が保存されました');
-                } else {
-                    window.alert(getCookie('username')+' でログイン中です');
-                }
-                return false;
-            });
-            
-            //ログアウト処理
-            $('#logout').submit(() => {
-                if(getCookiekey('joinID') == null ){
-                    console.log(getCookiekey('roomID'));
-                    //ユーザー名,ユーザーIDのクッキーを削除
-                    if(getCookie($('#username').val()) === $('#username').val()){
-                        //ユーザーをDBから削除
-                        socket.emit('deleteUN',getCookie('userID'));
-                        console.log(getCookie('userID'));
-                        window.alert(getCookie('username')+' がログアウトしました');
-                        //ユーザー名,ユーザーIDのクッキーを削除
-                        document.cookie = 'username =' + encodeURIComponent($('#username').val()) + '; max-age =' + -1;
-                        document.cookie = 'userID =' + encodeURIComponent(getCookie('userID')) + '; max-age =' + -1;
-
-                        console.log('クッキー：'　+ $('#username').val() + 'を削除しました');
-                    }
-                } else {
-                    window.alert('EXITしてください');
-                }
-                
-                return false;
-            });
-            
             
             //---------チャット関連スペース------------
             //チャットメッセージ送信
@@ -277,19 +351,6 @@
             socket.on('chat message', (msg) => {
                 $('#messages').prepend($('<li>').text(getCookie('username') + ':' + msg));
                 console.log('get messages');
-            });
-            //プライベートメッセージ送信
-            $('#private_chat').submit(() => {
-                var msg = [$('#private_msg').val(),String(getCookie('roomID'))]
-                socket.emit('private_chat message', msg);
-                console.log('send private message');
-                $('#private_msg').val('');
-                return false;
-            });
-            //プライベートメッセージ受信
-            socket.on('private_chat message', (private_msg) => {
-                $('#messages').prepend($('<li>').text(getCookie('roomID') + ':' + getCookie('username') + ':' + private_msg));
-                console.log('get private messages');
             });
             
         })
