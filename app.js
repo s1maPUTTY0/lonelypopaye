@@ -28,9 +28,23 @@ var join_userSchema = new sch(
     {ID: Number,username: String},
     {collection:'join_user'}
 );
+var Game_StatusSchema = new sch(
+    {INGAME: Number,
+     SPY: Number},
+    {collection:'Game_Status'}
+);
+var Vote_ResultSchema = new sch(
+    {Mission: Number,
+     Round: Number,
+     joinID: Number,
+     Vote_Result: Number},
+    {collection:'Vote_Result'}
+);
 
 var DBusername = mongoose.model('user', usernameSchema);
 var DBjoin_user = mongoose.model('join_user', join_userSchema);
+var DBGame_Status = mongoose.model('Game_Status',Game_StatusSchema);
+var DBVote_Result = mongoose.model('Vote_Result',Vote_ResultSchema);
 
 //databaseへの接続
 /*mongoose.connect('mongodb://192.168.33.10/database');*/
@@ -122,7 +136,38 @@ var JOINUNID = function(data){
         });
     });
 };
-
+//================Game_Status====================
+var INGAME = function(ingame){
+    return new Promise(function(resolve, reject) {
+        var INGame = new DBGame_Status();
+        INGame.INGAME = ingame;
+        INGame.save(function(err){
+            if(err) throw err;
+            console.log('INGAME...');
+            resolve ();
+        });
+    });
+};
+var SPY = function(spy){
+    return new Promise(function(resolve, reject) {
+        DBGame_Status.update(
+            {INGAME:1},{$set:{SPY: spy}},
+            {upsert: false, multi: true},
+            function(err){            
+                if(err) throw err;
+                console.log('SPY人数を保存しました'+spy+'人');
+                resolve ();
+        });
+    });
+};
+var GS_find = function(){
+    return new Promise(function(resolve, reject) {
+        DBGame_Status.find({},function(err,docs){
+            console.log(docs[0] + 'ゲームステータスを読み込みました');
+            resolve(docs[0]);
+        });
+    });
+};
 
 
 
@@ -131,31 +176,15 @@ io.on('connection', (socket) => {
     console.log('a user connected');
     //socket.io起動確認
     socket.emit('news', 'hello world');
-    DBusername.find({}, function(err, result) {
+    DBusername.find({}, (err, result) => {
         if (err) throw err
-        for(var i=0;i<result.length;i++){
-            console.log(result[i].username + '  LOGIN');
-            UNID(result[i].username).then(function(data){
-                console.log(data[0] + '表示');
-                console.log(data[1] + '表示');
-                socket.emit('UNhyouji',data);
-            });
-        };
+        socket.emit('UNhyouji',result);
+        socket.emit('SPY_Redisplay');
     });
-    DBjoin_user.find({}, function(err, result) {
-        if (err) throw err
-        socket.emit('join_count', result.length);
-        var JOIN;
-        for(var i=0;i<result.length;i++){
-            console.log(result[i].ID + ':' + result[i].username + '  JOIN');
-            JOINUNID(result[i].username).then(function(data){
-                console.log(data[0] + '表示:ID');
-                console.log(data[1] + '表示');
-                var username = data[0];
-                JOIN = username;
-                socket.emit('JOINhyouji',JOIN);
-            });
-        };
+    DBjoin_user.find({}, (err, result) => {
+        if (err) throw err;
+        socket.emit('join_count', result.length); 
+        socket.emit('JOINhyouji',result);
     });
     //================メインゲーム====================
     socket.on('join', (data) => {
@@ -183,19 +212,48 @@ io.on('connection', (socket) => {
             });
         });
     });
-    socket.on('Roll_Create', () => {
-        DBjoin_user.find({}, function(err, result) {
-            result.sort(function() {
-                return Math.random() - Math.random();
+    socket.on('Roll_Create', (Game_Status) => {
+        var GS = {};
+        var promise = Promise.resolve();
+        promise
+            .then(() => {
+                return new Promise(function(resolve, reject) {
+                    INGAME(1).then(() => {
+                        resolve();
+                    });
+                });
+            })
+            .then(() => {
+                return new Promise(function(resolve, reject) {
+                    SPY(Game_Status).then((Game_Status) => {
+                        resolve(Game_Status);
+                    });
+                });
+            })
+            .then(() => {
+                return new Promise(function(resolve, reject) {
+                    GS_find(Game_Status).then((Game_Status) => {
+                        resolve(Game_Status);
+                    });
+                });
+            })
+            .then((Game_Status) => {
+                console.log(Game_Status + 'ゲームステータス');
+                io.emit('Game_Status',Game_Status);
+                DBjoin_user.find({}, function(err, result) {
+                    result.sort(function() {
+                        return Math.random() - Math.random();
+                    });
+                    for(var i=0;i<result.length;i++){
+                        console.log(result[i]);
+                    };
+                    console.log(result);
+                    io.emit('Roll', result);
+                });
             });
-            for(var i=0;i<result.length;i++){
-                console.log(result[i]);
-            };
-            console.log(result);
-            io.emit('Roll', result);
-        });
-    });
+     });
     socket.on('Reset_All',() => {
+        io.emit('Roll_Reset');
         io.emit('Reset')
         JOINUNdelete().then((i) => {
             DBjoin_user.find({}, function(err, result) {

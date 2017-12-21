@@ -186,21 +186,22 @@
             //---------メインゲーム関連スペース------------
             var join_count;
             var SPY_count;
+            var Roll_count;
+             
             $('#SPY_count').change(() => {
                 SPY_count = $('#SPY_count').val();
-                console.log(SPY_count);
             });
             
             //=========メインゲーム：イベント=============
             $('#join').submit(() => {
                 if(getCookiekey('joinID') == null ){
-                    var data = getCookie($('#username').val());
+                    var data = getCookie('username');
                     if(data == null){                    
                         window.alert('ログインしてください'); 
                     } else if(join_count >= 10){
                         window.alert('満員です');                          
                     } else {
-                        socket.emit('join',{username:$('#username').val()});
+                        socket.emit('join',{username:getCookie('username')});
                         window.alert('JOINしました');
                     }
                 } else {
@@ -218,19 +219,22 @@
             });
             $('#Start_Game').submit(() => {
                 if(getCookiekey('joinID') != null){
-                    if(join_count >= SPY_count){
-                        socket.emit('Roll_Create');
-                    } else if(SPY_count != null){
+                    if(getCookie('INGAME')==1){
+                        console.log(getCookie('INGAME'));
+                        window.alert('ゲームは開始しています');
+                    } else if(SPY_count > join_count){
                         window.alert( SPY_count +'人以上参加してください');
+                    } else if(join_count >= SPY_count){
+                        socket.emit('Roll_Create',SPY_count);
                     } else {
                         window.alert('スパイ人数を選択してください');
-                    }                 
+                    } 
                 }                
                 return false;
             });
             $('#Reset_All').submit(() => {
                 if(getCookiekey('joinID') != null){
-                    if(window.confirm('Resetしますか？(参加者全員が強制EXITします)')){
+                    if(window.confirm('Resetしますか？(参加者全員が強制EXITします)')){                        
                         socket.emit('Reset_All');
                     }
                 }
@@ -243,8 +247,32 @@
                 $('#member_count').text('現在の参加者'　+　join_count + '名')
             });
             //JOINユーザー表示
-            socket.on('JOINhyouji', function (data) {
-                $('#join_members').append($('<li id = ' + getCookie('joinID') + '>').text(data));
+            socket.on('JOINhyouji', function (JOIN_UNID) {
+                console.log(JOIN_UNID + 'UNIDobj');
+                for(var i=0;i<JOIN_UNID.length;i++){
+                    $('#join_members').append($('<li id = ' + JOIN_UNID[i]._id + '>').text(JOIN_UNID[i].username));
+                }
+            });
+            socket.on('SPY_Redisplay',() => {
+                if(getCookie('Roll0') != null ){
+                    for(var i=0;i<join_count;i++){
+                        var Roll_hyouji = getCookie('Roll'+i);
+                            if(getCookie('joinID') === Roll_hyouji){
+                                Roll_count = i;
+                                console.log('あなたは'　+ Roll_count + '番目の役職として再表示します');
+                            }
+                    }
+                    if(getCookie('SPY') != null){
+                        SPY_count = getCookie('SPY');
+                        console.log('SPYは' + SPY_count + '人です');
+                    }
+                    if(Roll_count < SPY_count){
+                        for(var i=0;i<SPY_count;i++){
+                            $('#'+getCookie('Roll'+i)).css('color','red');
+                            console.log('SPYを再表示しました');
+                        }
+                    }
+                }
             });
             //JOINユーザー追加
             socket.on('JOINUNtuika', function (data) {
@@ -262,16 +290,20 @@
                 console.log(data +'を検出して削除しました:JOIN');
             });
             socket.on('Roll', (Roll) => {
+                console.log('役職振り分け開始');
                 var joinID = getCookie('joinID');
-                var Roll_count;
                 for(var i=0;i<Roll.length;i++){
                     if(joinID === Roll[i]._id){
                         Roll_count = i;
-                        console.log(joinID + '  ' + Roll[i]._id)
-                        break;
+                        console.log('あなたは'　+ Roll_count + '番目の役職になりました');
                     }
+                    document.cookie = 'Roll'+i+ '=' + encodeURIComponent(Roll[i]._id) + '; max-age =' + 24*60*60;
                 }
-                if(Roll_count < SPY_count){
+                if(getCookie('SPY') != null){
+                    SPY_count = getCookie('SPY');
+                    console.log('SPYは' + SPY_count + '人です');
+                }
+                if(Roll_count < SPY_count){                    
                     for(var i=0;i<SPY_count;i++){
                         $('#' + Roll[i]._id).css('color','red');
                         console.log(Roll[i] + 'SPYを表示しました');
@@ -279,10 +311,22 @@
                 }
             });
             //Reset
+            socket.on('Roll_Reset', () => {
+                for(var i=0;i<join_count;i++){
+                    document.cookie = 'Roll'+i+ '=; max-age =' + -1;
+                }
+            });
             socket.on('Reset',() => {
                 $('#' + getCookie('joinID')).remove();
                 document.cookie = 'joinID =' + getCookie('joinID') + '; max-age =' + -1;
+                document.cookie = 'INGAME =' + encodeURIComponent(getCookie('INGAME')) + '; max-age =' + -1;
+                document.cookie = 'SPY =' + encodeURIComponent(getCookie*('SPY')) + '; max-age =' + -1;
                 location.reload();
+            });
+            socket.on('Game_Status',(Game_Status) => {
+                document.cookie = 'INGAME =' + encodeURIComponent(Game_Status.INGAME) + '; max-age =' + 24*60*60;
+                document.cookie = 'SPY =' + encodeURIComponent(Game_Status.SPY) + '; max-age =' + 24*60*60;
+                console.log(Game_Status+'ゲームステータス');
             });
             
             //---------ログイン関連スペース------------
@@ -321,9 +365,10 @@
             });
             //=========ログイン関連：ソケット=============
             //login_user表示
-            socket.on('UNhyouji', function (data) {
-                $('#logins').append($('<li id = ' + data[1] + '>').text(data[0]));
-                console.log(data);
+            socket.on('UNhyouji', function (UNID) {
+                for(var i=0;i<UNID.length;i++){
+                    $('#logins').append($('<li id = ' + UNID[i]._id + '>').text(UNID[i].username));
+                }
             });
             socket.on('UNtuika', function (data) {
                 $('#logins').append($('<li id = ' + data[1] + '>').text(data[0]));
