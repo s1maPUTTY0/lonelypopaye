@@ -28,6 +28,10 @@ var join_userSchema = new sch(
     {ID: Number,username: String},
     {collection:'join_user'}
 );
+var LeaderSchema = new sch(
+    {ID: Number,username: String},
+    {collection:'Leader'}
+);
 var Game_StatusSchema = new sch(
     {INGAME: Number,
      SPY: Number},
@@ -43,6 +47,7 @@ var Vote_ResultSchema = new sch(
 
 var DBusername = mongoose.model('user', usernameSchema);
 var DBjoin_user = mongoose.model('join_user', join_userSchema);
+var DBLeader = mongoose.model('Leader', LeaderSchema);
 var DBGame_Status = mongoose.model('Game_Status',Game_StatusSchema);
 var DBVote_Result = mongoose.model('Vote_Result',Vote_ResultSchema);
 
@@ -98,7 +103,7 @@ var JOINUNtouroku = function(data){
         UN.save(function(err){
             if(err) console.log(err);
             console.log(data + '登録完了');
-            resolve(true);
+            resolve();
         });
     });
 }; 
@@ -136,6 +141,25 @@ var JOINUNID = function(data){
         });
     });
 };
+//================Leader====================
+var Leadertouroku = function(data){
+    return new Promise(function(resolve, reject) {
+            var Leader = new DBLeader();    
+            Leader.username = data.username;
+            Leader._id = data._id;
+            Leader.save(function(err){
+                if(err) console.log(err);
+                console.log(Leader + 'リーダー登録完了');
+                resolve();
+            });
+    });
+};
+var Delete_Leader = function(){
+    DBLeader.remove({},(err) => {
+        if(err) console.log(err);
+        console.log('Leader削除完了');
+    });
+}
 //================Game_Status====================
 var INGAME = function(ingame){
     return new Promise(function(resolve, reject) {
@@ -168,7 +192,12 @@ var GS_find = function(){
         });
     });
 };
-
+var Reset_Game_Status = function(){
+    DBGame_Status.remove({},(err) => {
+        if(err) console.log(err);
+        console.log('Game_Status削除完了');
+    });
+}
 
 
 io.on('connection', (socket) => {
@@ -179,28 +208,38 @@ io.on('connection', (socket) => {
     DBusername.find({}, (err, result) => {
         if (err) throw err
         socket.emit('UNhyouji',result);
-        socket.emit('SPY_Redisplay');
     });
-    DBjoin_user.find({}, (err, result) => {
-        if (err) throw err;
-        socket.emit('join_count', result.length); 
-        socket.emit('JOINhyouji',result);
-    });
+    GS_find().then((GS) => {
+        if(GS == null){
+            DBjoin_user.find({}, (err, result) => {
+            if (err) throw err;
+            socket.emit('join_count', result.length); 
+            socket.emit('JOINhyouji',result);
+            socket.emit('SPY_Redisplay');
+            });            
+        } else {
+            DBLeader.find({}, (err, result) => {
+            if (err) throw err;
+            socket.emit('join_count', result.length); 
+            socket.emit('JOINhyouji',result);
+            socket.emit('SPY_Redisplay');
+            }); 
+        }
+    })
+        
     //================メインゲーム====================
     socket.on('join', (data) => {
         var UNID = data.username;
-        JOINUNtouroku(UNID).then((i) => {
-            if(i){
-                JOINUNID(UNID).then((finddata) => {
-                    socket.emit('JOINIDtuika',finddata[1]);
-                    console.log(finddata[1] + 'JOINID追加');
-                    io.emit('JOINUNtuika',{username:finddata[0],joinID:finddata[1]});
-                });
-                DBjoin_user.find({}, function(err, result) {
-                    if (err) throw err
-                    io.emit('join_count', result.length);
-                });
-            }            
+        JOINUNtouroku(UNID).then(() => {
+            JOINUNID(UNID).then((finddata) => {
+                socket.emit('JOINIDtuika',finddata[1]);
+                console.log(finddata[1] + 'JOINID追加');
+                io.emit('JOINUNtuika',{username:finddata[0],joinID:finddata[1]});
+            });
+            DBjoin_user.find({}, function(err, result) {
+                if (err) throw err
+                io.emit('join_count', result.length);
+            });          
         });        
     });
     socket.on('exit', (data) => {
@@ -241,20 +280,40 @@ io.on('connection', (socket) => {
                 console.log(Game_Status + 'ゲームステータス');
                 io.emit('Game_Status',Game_Status);
                 DBjoin_user.find({}, function(err, result) {
-                    result.sort(function() {
-                        return Math.random() - Math.random();
+                    return new Promise(function(resolve, reject) {
+                        result.sort(function() {
+                            return Math.random() - Math.random();
+                        });
+                        for(var i=0;i<result.length;i++){
+                            Leadertouroku(result[i]);
+                        };
+                        console.log(result + 'Rollリザルト');
+
+                        io.emit('Roll', result);
+                        resolve();
                     });
-                    for(var i=0;i<result.length;i++){
-                        console.log(result[i]);
-                    };
-                    console.log(result);
-                    io.emit('Roll', result);
+                })
+                .then(() => {
+                    DBjoin_user.find({}, function(err, result) {
+                        result.sort(function() {
+                            return Math.random() - Math.random();
+                        });
+                        for(var i=0;i<result.length;i++){
+                            Leadertouroku(result[i]);
+                        };
+                        console.log(result + 'Leaderリザルト');
+
+                        io.emit('Leader', result);
+                    
+                    });
                 });
             });
      });
     socket.on('Reset_All',() => {
         io.emit('Roll_Reset');
         io.emit('Reset')
+        Reset_Game_Status();
+        Delete_Leader();
         JOINUNdelete().then((i) => {
             DBjoin_user.find({}, function(err, result) {
                 if (err) throw err

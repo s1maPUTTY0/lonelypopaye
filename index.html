@@ -85,7 +85,7 @@
     </style>
   </head>
   <body>
-      <H1>LonelyPopaye</H1>v0.0.4
+      <H1>LonelyPopaye</H1>v0.0.5
       <a href="note.html">リリースノート</a>
       <div class="box1">
           
@@ -179,7 +179,7 @@
             
             //ソケットIO起動
             var socket = io();
-            socket.on('news', function (data) {
+            socket.on('news', (data) => {
                 console.log(data);
             });
             
@@ -202,6 +202,7 @@
                         window.alert('満員です');                          
                     } else {
                         socket.emit('join',{username:getCookie('username')});
+                        console.log(getCookie('username') + 'JOIN名を送信しました');
                         window.alert('JOINしました');
                     }
                 } else {
@@ -220,7 +221,6 @@
             $('#Start_Game').submit(() => {
                 if(getCookiekey('joinID') != null){
                     if(getCookie('INGAME')==1){
-                        console.log(getCookie('INGAME'));
                         window.alert('ゲームは開始しています');
                     } else if(SPY_count > join_count){
                         window.alert( SPY_count +'人以上参加してください');
@@ -247,7 +247,7 @@
                 $('#member_count').text('現在の参加者'　+　join_count + '名')
             });
             //JOINユーザー表示
-            socket.on('JOINhyouji', function (JOIN_UNID) {
+            socket.on('JOINhyouji', (JOIN_UNID) => {
                 console.log(JOIN_UNID + 'UNIDobj');
                 for(var i=0;i<JOIN_UNID.length;i++){
                     $('#join_members').append($('<li id = ' + JOIN_UNID[i]._id + '>').text(JOIN_UNID[i].username));
@@ -275,7 +275,7 @@
                 }
             });
             //JOINユーザー追加
-            socket.on('JOINUNtuika', function (data) {
+            socket.on('JOINUNtuika', (data) => {
                 $('#join_members').append($('<li id = ' + data.joinID + '>').text(data.username));
                 console.log(data + 'JOINユーザー追加');
             });
@@ -284,11 +284,12 @@
                 document.cookie = 'joinID =' + encodeURIComponent(joinID) + '; max-age =' + 24*60*60;
             });
             //join表示、joinID削除
-            socket.on('JOINUNsakujo', function (data) {
+            socket.on('JOINUNsakujo', (data) => {
                 $('#' + data).remove();
                 document.cookie = 'joinID =' + encodeURIComponent(data) + '; max-age =' + -1;
                 console.log(data +'を検出して削除しました:JOIN');
             });
+            //役職振り分け
             socket.on('Roll', (Roll) => {
                 console.log('役職振り分け開始');
                 var joinID = getCookie('joinID');
@@ -309,11 +310,19 @@
                         console.log(Roll[i] + 'SPYを表示しました');
                     }
                 }
+                location.reload();
+            });
+            //Leader順
+            socket.on('Leader',(Leader) => {
+                for(var i=0;i<Leader.length;i++){
+                    document.cookie = 'Leader'+i+ '=' + encodeURIComponent(Leader[i]._id) + '; max-age =' + 24*60*60;
+                }
             });
             //Reset
             socket.on('Roll_Reset', () => {
                 for(var i=0;i<join_count;i++){
                     document.cookie = 'Roll'+i+ '=; max-age =' + -1;
+                    document.cookie = 'Leader'+i+ '=; max-age =' + -1;
                 }
             });
             socket.on('Reset',() => {
@@ -365,22 +374,22 @@
             });
             //=========ログイン関連：ソケット=============
             //login_user表示
-            socket.on('UNhyouji', function (UNID) {
+            socket.on('UNhyouji', (UNID) => {
                 for(var i=0;i<UNID.length;i++){
                     $('#logins').append($('<li id = ' + UNID[i]._id + '>').text(UNID[i].username));
                 }
             });
-            socket.on('UNtuika', function (data) {
+            socket.on('UNtuika', (data) => {
                 $('#logins').append($('<li id = ' + data[1] + '>').text(data[0]));
                 console.log(data);
             });
             //login_user削除
-            socket.on('UNsakujo', function (data) {
+            socket.on('UNsakujo', (data) => {
                 $('#' + data).remove();
                 console.log(data +'を検出して削除しました');
             });
             //userID追加
-            socket.on('IDtuika',function(data){
+            socket.on('IDtuika', (data) => {
                 document.cookie = 'userID =' + encodeURIComponent(data) + '; max-age =' + 24*60*60;
             });
             
