@@ -276,8 +276,8 @@ io.on('connection', (socket) => {
                     });
                 });
             })
-            .then((Game_Status) => {
-                console.log(Game_Status + 'ゲームステータス');
+            .then((Game_Status) => { //Game_StatusはGame_Status(DB)の配列
+                console.log(Game_Status + 'ゲームステータスを取得完了');
                 io.emit('Game_Status',Game_Status);
                 DBjoin_user.find({}, function(err, result) {
                     return new Promise(function(resolve, reject) {
