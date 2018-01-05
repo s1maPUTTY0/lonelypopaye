@@ -34,7 +34,10 @@ var LeaderSchema = new sch(
 );
 var Game_StatusSchema = new sch(
     {INGAME: Number,
-     SPY: Number},
+     SPY: Number,
+     Mission: Number,
+     Round: Number,
+     Leader: Number},
     {collection:'Game_Status'}
 );
 var Vote_ResultSchema = new sch(
@@ -172,7 +175,7 @@ var INGAME = function(ingame){
         });
     });
 };
-var SPY = function(spy){
+var SPY_SET = function(spy){
     return new Promise(function(resolve, reject) {
         DBGame_Status.update(
             {INGAME:1},{$set:{SPY: spy}},
@@ -180,6 +183,42 @@ var SPY = function(spy){
             function(err){            
                 if(err) throw err;
                 console.log('SPY人数を保存しました'+spy+'人');
+                resolve ();
+        });
+    });
+};
+var Mission_SET = function(Mission){
+    return new Promise(function(resolve, reject) {
+        DBGame_Status.update(
+            {INGAME:1},{$set:{Mission: Mission}},
+            {upsert: false, multi: true},
+            function(err){            
+                if(err) throw err;
+                console.log('Missionセット完了' + Mission);
+                resolve ();
+        });
+    });
+};
+var Round_SET = function(Round){
+    return new Promise(function(resolve, reject) {
+        DBGame_Status.update(
+            {INGAME:1},{$set:{Round: Round}},
+            {upsert: false, multi: true},
+            function(err){            
+                if(err) throw err;
+                console.log('Roundセット完了' + Round);
+                resolve ();
+        });
+    });
+};
+var Leader_SET = function(Leader){
+    return new Promise(function(resolve, reject) {
+        DBGame_Status.update(
+            {INGAME:1},{$set:{Leader: Leader}},
+            {upsert: false, multi: true},
+            function(err){            
+                if(err) throw err;
+                console.log('Leaderセット完了' + Leader);
                 resolve ();
         });
     });
@@ -223,7 +262,8 @@ io.on('connection', (socket) => {
             socket.emit('join_count', result.length); 
             socket.emit('JOINhyouji',result);
             socket.emit('SPY_Redisplay');
-            }); 
+            });
+            socket.emit('game_status_display',GS);
         }
     })
         
@@ -251,7 +291,7 @@ io.on('connection', (socket) => {
             });
         });
     });
-    socket.on('Roll_Create', (Game_Status) => {
+    socket.on('Roll_Create', (GSobj) => {
         var GS = {};
         var promise = Promise.resolve();
         promise
@@ -264,14 +304,35 @@ io.on('connection', (socket) => {
             })
             .then(() => {
                 return new Promise(function(resolve, reject) {
-                    SPY(Game_Status).then((Game_Status) => {
-                        resolve(Game_Status);
+                    SPY_SET(GSobj.SPY).then(() => {
+                        resolve();
                     });
                 });
             })
             .then(() => {
                 return new Promise(function(resolve, reject) {
-                    GS_find(Game_Status).then((Game_Status) => {
+                    Mission_SET(GSobj.Mission).then(() => {
+                        resolve();
+                    });
+                });
+            })
+            .then(() => {
+                return new Promise(function(resolve, reject) {
+                    Round_SET(GSobj.Round).then(() => {
+                        resolve();
+                    });
+                });
+            })
+            .then(() => {
+                return new Promise(function(resolve, reject) {
+                    Leader_SET(GSobj.Leader).then(() => {
+                        resolve();
+                    });
+                });
+            })
+            .then(() => {
+                return new Promise(function(resolve, reject) {
+                    GS_find().then((Game_Status) => {
                         resolve(Game_Status);
                     });
                 });
@@ -284,9 +345,6 @@ io.on('connection', (socket) => {
                         result.sort(function() {
                             return Math.random() - Math.random();
                         });
-                        for(var i=0;i<result.length;i++){
-                            Leadertouroku(result[i]);
-                        };
                         console.log(result + 'Rollリザルト');
 
                         io.emit('Roll', result);

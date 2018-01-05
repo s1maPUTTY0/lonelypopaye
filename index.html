@@ -85,7 +85,7 @@
     </style>
   </head>
   <body>
-      <H1>LonelyPopaye</H1>v0.0.5
+      <H1>LonelyPopaye</H1>v0.0.6
       <a href="note.html">リリースノート</a>
       <div class="box1">
           
@@ -132,6 +132,7 @@
                 </form>
             </div>
             <li id = 'member_count'></li>
+            <li id = 'game_status'></li>
             main_game:
             <ul id="join_members"></ul>
         </div>
@@ -185,8 +186,12 @@
             
             //---------メインゲーム関連スペース------------
             var join_count;
-            var SPY_count;
+            var SPY_count = 1;
             var Roll_count;
+            var Mission_count;
+            var Round_count;
+            var Leader_count;
+            
              
             $('#SPY_count').change(() => {
                 SPY_count = $('#SPY_count').val();
@@ -225,7 +230,14 @@
                     } else if(SPY_count > join_count){
                         window.alert( SPY_count +'人以上参加してください');
                     } else if(join_count >= SPY_count){
-                        socket.emit('Roll_Create',SPY_count);
+                        Mission_count = 1;
+                        Round_count = 1;
+                        Leader_count = 1;
+                        var GSobj = {SPY: SPY_count,
+                                     Mission: Mission_count,
+                                     Round: Round_count,
+                                     Leader: Leader_count};
+                        socket.emit('Roll_Create',GSobj);
                     } else {
                         window.alert('スパイ人数を選択してください');
                     } 
@@ -252,7 +264,19 @@
                 for(var i=0;i<JOIN_UNID.length;i++){
                     $('#join_members').append($('<li id = ' + JOIN_UNID[i]._id + '>').text(JOIN_UNID[i].username));
                 }
+                
+                var Leader = getCookie('Leader' + Leader_count);
+                $('#' + Leader).append('☆Leader');
             });
+            //Game_Status表示
+            socket.on('game_status_display',(GS) => {
+                Mission_count = GS.Mission;
+                Round_count = GS.Round;
+                Leader_count = GS.Leader;
+                $('#game_status').text('ミッション'　+　Mission_count + '　' + 'ラウンド'　+　Round_count + '　');
+                
+            });
+            //SPY再表示
             socket.on('SPY_Redisplay',() => {
                 if(getCookie('Roll0') != null ){
                     for(var i=0;i<join_count;i++){
@@ -310,13 +334,14 @@
                         console.log(Roll[i] + 'SPYを表示しました');
                     }
                 }
-                location.reload();
+                location.reload();//並べ替え、ゲームステータス表示
             });
             //Leader順
             socket.on('Leader',(Leader) => {
                 for(var i=0;i<Leader.length;i++){
-                    document.cookie = 'Leader'+i+ '=' + encodeURIComponent(Leader[i]._id) + '; max-age =' + 24*60*60;
+                    document.cookie = 'Leader'+(i+1)+ '=' + encodeURIComponent(Leader[i]._id) + '; max-age =' + 24*60*60;
                 }
+                console.log('Leaderを表示しました');
             });
             //Reset
             socket.on('Roll_Reset', () => {
