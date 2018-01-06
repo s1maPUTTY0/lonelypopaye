@@ -82,6 +82,9 @@
             right:0px;
             
         }
+        .selectedmember{
+            background-color: #FFFF00;
+        }
     </style>
   </head>
   <body>
@@ -198,6 +201,87 @@
             });
             
             //=========メインゲーム：イベント=============
+            //メンバー選択処理
+            $(document).on("click","#"+getCookie('Leader1'),() => {
+                $("#"+getCookie('Leader1')).toggleClass("selectedmember");
+                if(getCookie('Smember1') == null){
+                    document.cookie = 'Smember1=' + encodeURIComponent(getCookie('Leader1')) + '; max-age =' + 24*60*60;
+                } else {
+                    document.cookie = 'Smember1=; max-age =' + -1;
+                }
+            });
+            $(document).on("click","#"+getCookie('Leader2'),() => {
+                $("#"+getCookie('Leader2')).toggleClass("selectedmember");
+                if(getCookie('Smember2') == null){
+                    document.cookie = 'Smember2=' + encodeURIComponent(getCookie('Leader2')) + '; max-age =' + 24*60*60;
+                } else {
+                    document.cookie = 'Smember2=; max-age =' + -1;
+                }
+            });
+            $(document).on("click","#"+getCookie('Leader3'),() => {
+                $("#"+getCookie('Leader3')).toggleClass("selectedmember");
+                if(getCookie('Smember3') == null){
+                    document.cookie = 'Smember3=' + encodeURIComponent(getCookie('Leader3')) + '; max-age =' + 24*60*60;
+                } else {
+                    document.cookie = 'Smember3=; max-age =' + -1;
+                }
+            });
+            $(document).on("click","#"+getCookie('Leader4'),() => {
+                $("#"+getCookie('Leader4')).toggleClass("selectedmember");
+                if(getCookie('Smember4') == null){
+                    document.cookie = 'Smember4=' + encodeURIComponent(getCookie('Leader4')) + '; max-age =' + 24*60*60;
+                } else {
+                    document.cookie = 'Smember4=; max-age =' + -1;
+                }
+            });
+            $(document).on("click","#"+getCookie('Leader5'),() => {
+                $("#"+getCookie('Leader5')).toggleClass("selectedmember");
+                if(getCookie('Smember5') == null){
+                    document.cookie = 'Smember5=' + encodeURIComponent(getCookie('Leader5')) + '; max-age =' + 24*60*60;
+                } else {
+                    document.cookie = 'Smember5=; max-age =' + -1;
+                }
+            });
+            $(document).on("click","#"+getCookie('Leader6'),() => {
+                $("#"+getCookie('Leader6')).toggleClass("selectedmember");
+                if(getCookie('Smember6') == null){
+                    document.cookie = 'Smember6=' + encodeURIComponent(getCookie('Leader6')) + '; max-age =' + 24*60*60;
+                } else {
+                    document.cookie = 'Smember6=; max-age =' + -1;
+                }
+            });
+            $(document).on("click","#"+getCookie('Leader7'),() => {
+                $("#"+getCookie('Leader7')).toggleClass("selectedmember");
+                if(getCookie('Smember7') == null){
+                    document.cookie = 'Smember7=' + encodeURIComponent(getCookie('Leader7')) + '; max-age =' + 24*60*60;
+                } else {
+                    document.cookie = 'Smember7=; max-age =' + -1;
+                }
+            });
+            $(document).on("click","#"+getCookie('Leader8'),() => {
+                $("#"+getCookie('Leader8')).toggleClass("selectedmember");
+                if(getCookie('Smember8') == null){
+                    document.cookie = 'Smember8=' + encodeURIComponent(getCookie('Leader8')) + '; max-age =' + 24*60*60;
+                } else {
+                    document.cookie = 'Smember8=; max-age =' + -1;
+                }
+            });
+            $(document).on("click","#"+getCookie('Leader9'),() => {
+                $("#"+getCookie('Leader9')).toggleClass("selectedmember");
+                if(getCookie('Smember9') == null){
+                    document.cookie = 'Smember9=' + encodeURIComponent(getCookie('Leader9')) + '; max-age =' + 24*60*60;
+                } else {
+                    document.cookie = 'Smember9=; max-age =' + -1;
+                }
+            });
+            $(document).on("click","#"+getCookie('Leader10'),() => {
+                $("#"+getCookie('Leader10')).toggleClass("selectedmember");
+                if(getCookie('Smember10') == null){
+                    document.cookie = 'Smember10=' + encodeURIComponent(getCookie('Leader10')) + '; max-age =' + 24*60*60;
+                } else {
+                    document.cookie = 'Smember10=; max-age =' + -1;
+                }
+            });
             $('#join').submit(() => {
                 if(getCookiekey('joinID') == null ){
                     var data = getCookie('username');
@@ -266,7 +350,10 @@
                 }
                 
                 var Leader = getCookie('Leader' + Leader_count);
-                $('#' + Leader).append('☆Leader');
+                $(document).ready(() => {
+                    $('#' + Leader).append('☆Leader'); //修正対象
+                });
+                
             });
             //Game_Status表示
             socket.on('game_status_display',(GS) => {
