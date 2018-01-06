@@ -244,6 +244,9 @@ io.on('connection', (socket) => {
     console.log('a user connected');
     //socket.io起動確認
     socket.emit('news', 'hello world');
+    socket.on('Timer',() => {
+        io.emit('Timer');
+    });
     DBusername.find({}, (err, result) => {
         if (err) throw err
         socket.emit('UNhyouji',result);
