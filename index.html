@@ -143,6 +143,21 @@
             <li id = 'game_status'></li>
             main_game:
             <ul id="join_members"></ul>
+            <form action="" id="Smember">
+                      <button type="submit" class="submit" id="Smember">メンバー決定</button>
+            </form>
+            <form action="" id="Vote_A">
+                      <button type="submit" class="submit" id="Vote_A">賛成</button>
+            </form>
+            <form action="" id="Vote_O">
+                      <button type="submit" class="submit" id="Vote_O">反対</button>
+            </form>
+            <form action="" id="Mission_S">
+                      <button type="submit" class="submit" id="Mission_S">ミッションを成功させる</button>
+            </form>
+            <form action="" id="Mission_F">
+                      <button type="submit" class="submit" id="Mission_F">ミッションを失敗させる</button>
+            </form>
         </div>
           
         <div class="chat_space">
@@ -220,8 +235,7 @@
                 console.log(data);
             });
             $('#Timer').submit(() => {
-                socket.emit('Timer')
-                
+                socket.emit('Timer');
                 return false;
             });
             socket.on('Timer',() => {
