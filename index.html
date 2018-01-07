@@ -178,30 +178,8 @@
         $(function(){
             var countDownTime = 300;
             var  countDown = function() {
-                var startDateTime = new Date();
-                var endDateTime = startDateTime;
-                var left =  endDateTime - startDateTime;
-                var a_day = 24 * 60 * 60 * 1000;
-
-                // 期限から現在までの『残時間の日の部分』  
-                var d = Math.floor(left / a_day) 
-
-                // 期限から現在までの『残時間の時間の部分』
-                var h = Math.floor((left % a_day) / (60 * 60 * 1000)) 
-
-                // 残時間を秒で割って残分数を出す。
-                // 残分数を60で割ることで、残時間の「時」の余りとして、『残時間の分の部分』を出す
-                var m = Math.floor((left % a_day) / (60 * 1000)) % 60 
-
-                // 残時間をミリ秒で割って、残秒数を出す。
-                // 残秒数を60で割った余りとして、「秒」の余りとしての残「ミリ秒」を出す。
-                // 更にそれを60で割った余りとして、「分」で割った余りとしての『残時間の秒の部分』を出す
-                var s = Math.floor((left % a_day) / 1000) % 60 % 60 
-                
-                
                 $("#TimeLeft").text('議論時間　残り'　+　countDownTime);
                 countDownTime --;
-                
             }
             setInterval(countDown, 1000);
             //クッキーの値の取得
@@ -402,15 +380,26 @@
             //JOINユーザー表示
             socket.on('JOINhyouji', (JOIN_UNID) => {
                 console.log(JOIN_UNID + 'UNIDobj');
-                for(var i=0;i<JOIN_UNID.length;i++){
-                    $('#join_members').append($('<li id = ' + JOIN_UNID[i]._id + '>').text(JOIN_UNID[i].username));
+                
+                function JOINhyoji(){
+                    var myDefer = $.Deferred();
+                    for(var i=0;i<JOIN_UNID.length;i++){
+                        $('#join_members').append($('<li id = ' + JOIN_UNID[i]._id + '>').text(JOIN_UNID[i].username));
+                        if(i==JOIN_UNID.length-1){
+                            myDefer.resolve();
+                            return myDefer.promise();
+                        }
+                    }
                 }
-                
-                var Leader = getCookie('Leader' + Leader_count);
-                $(document).ready(() => {
+                JOINhyoji().then(() => {
+                    var Leader = getCookie('Leader' + Leader_count);
                     $('#' + Leader).append('☆Leader'); //修正対象
-                });
-                
+                    for(var i=1;i<=10;i++){
+                        if(getCookie('Smember'+i) != null ){
+                            $("#"+getCookie('Leader'+i)).toggleClass("selectedmember");
+                        }
+                    }
+                });      
             });
             //Game_Status表示
             socket.on('game_status_display',(GS) => {
@@ -478,7 +467,11 @@
                         console.log(Roll[i] + 'SPYを表示しました');
                     }
                 }
-                location.reload();//並べ替え、ゲームステータス表示
+                setTimeout(() => {
+                    
+                    location.reload();//並べ替え、ゲームステータス表示
+                    
+                },500);
             });
             //Leader順
             socket.on('Leader',(Leader) => {
@@ -491,7 +484,8 @@
             socket.on('Roll_Reset', () => {
                 for(var i=0;i<join_count;i++){
                     document.cookie = 'Roll'+i+ '=; max-age =' + -1;
-                    document.cookie = 'Leader'+i+ '=; max-age =' + -1;
+                    document.cookie = 'Leader'+(i+1)+ '=; max-age =' + -1;
+                    document.cookie = 'Smember'+(i+1)+'=; max-age =' + -1;
                 }
             });
             socket.on('Reset',() => {
