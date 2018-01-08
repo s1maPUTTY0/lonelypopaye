@@ -85,6 +85,9 @@
         .selectedmember{
             background-color: #FFFF00;
         }
+        .hidden{
+            display: none;
+        }
     </style>
   </head>
   <body>
@@ -147,10 +150,10 @@
                       <button type="submit" class="submit" id="Smember">メンバー決定</button>
             </form>
             <form action="" id="Vote_A">
-                      <button type="submit" class="submit" id="Vote_A">賛成(未実装)</button>
+                      <button type="submit" class="submit" id="Vote_A">賛成</button>
             </form>
             <form action="" id="Vote_O">
-                      <button type="submit" class="submit" id="Vote_O">反対(未実装)</button>
+                      <button type="submit" class="submit" id="Vote_O">反対</button>
             </form>
             <form action="" id="Mission_S">
                       <button type="submit" class="submit" id="Mission_S">ミッションを成功させる(未実装)</button>
@@ -176,10 +179,17 @@
     <script>
         
         $(function(){
+            //議論時間タイマ
             var countDownTime = 300;
             var  countDown = function() {
-                $("#TimeLeft").text('議論時間　残り'　+　countDownTime);
-                countDownTime --;
+                if(countDownTime === 0){
+                    $("#TimeLeft").text('議論時間　残り'　+　countDownTime + 'タイムアップ！');
+                }
+                if(countDownTime>=0){
+                    $("#TimeLeft").text('議論時間　残り'　+　countDownTime);
+                    countDownTime --;
+                }
+                
             }
             setInterval(countDown, 1000);
             //クッキーの値の取得
@@ -212,6 +222,7 @@
             socket.on('news', (data) => {
                 console.log(data);
             });
+            //タイマーボタンの処理
             $('#Timer').submit(() => {
                 socket.emit('Timer');
                 return false;
@@ -229,7 +240,6 @@
             var Mission_count;
             var Round_count;
             var Leader_count;
-            
              
             $('#SPY_count').change(() => {
                 SPY_count = $('#SPY_count').val();
@@ -383,6 +393,42 @@
                 });
                 return false;
             });
+            $('#Vote_A').submit(() => {
+                if(getCookie('INGAME') == 1 && getCookie('Vote_C') == null){
+                    var Vote = {Mission: Number,
+                                Round: Number,
+                                joinID: Number,
+                                Vote_Result: Number,
+                                join_count: Number};
+                    Vote.Mission = Mission_count;
+                    Vote.Round = Round_count;
+                    Vote.joinID = getCookie('joinID');
+                    Vote.Vote_Result = 1;
+                    Vote.join_count = join_count;
+                    socket.emit('Vote',Vote);
+                    document.cookie = 'Vote_C=' + encodeURIComponent(1) + '; max-age =' + 24*60*60;
+                    console.log('投票しました');
+                }
+                return false;
+            });
+            $('#Vote_O').submit(() => {
+                if(getCookie('INGAME') == 1 && getCookie('Vote_C') == null){
+                    var Vote = {Mission: Number,
+                                Round: Number,
+                                joinID: String,
+                                Vote_Result: Number,
+                                join_count: Number};
+                    Vote.Mission = Mission_count;
+                    Vote.Round = Round_count;
+                    Vote.joinID = getCookie('joinID');
+                    Vote.Vote_Result = 0;
+                    Vote.join_count = join_count;
+                    socket.emit('Vote',Vote);
+                    document.cookie = 'Vote_C=' + encodeURIComponent(0) + '; max-age =' + 24*60*60;
+                    console.log('投票しました');
+                }
+                return false;
+            });
             $('#Reset_All').submit(() => {
                 if(getCookiekey('joinID') != null){
                     if(window.confirm('Resetしますか？(参加者全員が強制EXITします)')){                        
@@ -491,7 +537,7 @@
                     
                     location.reload();//並べ替え、ゲームステータス表示
                     
-                },500);
+                },1000);
             });
             //Leader順
             socket.on('Leader',(Leader) => {
@@ -510,6 +556,26 @@
                 }
                 console.log('選出メンバーを受信しました'+Smember);
             });
+            //投票結果表示
+            socket.on('Vote_display',(Vote_Result) => {
+                console.log(Vote_Result + '投票結果を受け取りました');
+                console.log(Vote_Result.length + '投票数');
+                for(var i=0;i < Vote_Result.length;i++){
+                    console.log(Vote_Result[i].joinID + 'JOINID');
+                    for(var j=1;j <= 10;j++){
+                        console.log(getCookie('Leader'+j) + 'JOINIDforGetCookie');
+                        if(Vote_Result[i].joinID == getCookie('Leader'+j)){
+                            if(Vote_Result[i].Vote_Result == 1){
+                                $('#' + getCookie('Leader'+j)).prepend('賛成');
+                                console.log(getCookie('Leader'+j) + 'に賛成を追加します')
+                            }　else if(Vote_Result[i].Vote_Result == 0){
+                                $('#' + getCookie('Leader'+j)).prepend('反対');
+                                console.log(getCookie('Leader'+j) + 'に反対を追加します')
+                            }
+                        }
+                    }
+                }
+            });
             //Reset
             socket.on('Roll_Reset', () => {
                 for(var i=0;i<join_count;i++){
@@ -517,6 +583,7 @@
                     document.cookie = 'Leader'+(i+1)+ '=; max-age =' + -1;
                     document.cookie = 'Smember'+(i+1)+'=; max-age =' + -1;
                     document.cookie = 'Smember'+(i+1)+'A'+'=; max-age =' + -1;
+                    document.cookie = 'Vote_C=; max-age =' + -1;
                 }
             });
             socket.on('Reset',() => {

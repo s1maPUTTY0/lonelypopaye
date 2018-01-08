@@ -43,7 +43,7 @@ var Game_StatusSchema = new sch(
 var Vote_ResultSchema = new sch(
     {Mission: Number,
      Round: Number,
-     joinID: Number,
+     joinID: String,
      Vote_Result: Number},
     {collection:'Vote_Result'}
 );
@@ -231,13 +231,40 @@ var GS_find = function(){
         });
     });
 };
+var Vote_SET = function(Vote){
+    return new Promise(function(resolve, reject) {
+        var Vote_Result = new DBVote_Result();
+        Vote_Result.Mission = Vote.Mission;
+        Vote_Result.Round = Vote.Round;
+        Vote_Result.joinID = Vote.joinID;
+        Vote_Result.Vote_Result = Vote.Vote_Result;
+        Vote_Result.save(function(err){
+            if(err) throw err;
+            console.log('投票結果を保存しました');
+            resolve ();
+        });
+    });
+};
+var Vote_find = function(){
+    return new Promise(function(resolve, reject) {
+        DBVote_Result.find({},function(err,docs){
+            console.log('投票結果を読み込みました');
+            resolve(docs);
+        });
+    });
+};
 var Reset_Game_Status = function(){
     DBGame_Status.remove({},(err) => {
         if(err) console.log(err);
         console.log('Game_Status削除完了');
     });
 }
-
+var Delete_Vote_Result = function(){
+    DBVote_Result.remove({},(err) => {
+        if(err) console.log(err);
+        console.log('Vote_Result削除完了');
+    });
+}
 
 io.on('connection', (socket) => {
     
@@ -341,7 +368,7 @@ io.on('connection', (socket) => {
                 });
             })
             .then((Game_Status) => { //Game_StatusはGame_Status(DB)の配列
-                console.log(Game_Status + 'ゲームステータスを取得完了');
+                console.log('ゲームステータスを取得完了');
                 io.emit('Game_Status',Game_Status);
                 DBjoin_user.find({}, function(err, result) {
                     return new Promise(function(resolve, reject) {
@@ -374,11 +401,33 @@ io.on('connection', (socket) => {
         console.log(Smember + '選出メンバーを受信しました。')
         socket.broadcast.emit('Smember_display',Smember);
     });
+    socket.on('Vote',(Vote) => {
+        console.log(Vote + '投票結果を受信しました。')
+        Vote_SET(Vote).then(() => {
+            DBVote_Result.find({},(err,Vote_Result) => {
+                /*console.log(Vote_Result + '投票結果')
+                console.log(Vote_Result.length + '投票結果')
+                console.log(Vote.join_count + '投票結果')*/
+                if(Vote_Result.length == Vote.join_count){
+                    io.emit('Vote_display',Vote_Result);
+                    console.log('投票結果を送信しました');
+                }
+            });
+            /*Vote_find().then((Vote_Result) => {
+                resolve(Vote_Result);
+            });
+        }).then((Vote_Result) => {
+            if(Vote_Result.length == Vote.join_count){
+                io.emit('Vote_display',Vote_Result);
+            }*/
+        });
+    });
     socket.on('Reset_All',() => {
         io.emit('Roll_Reset');
         io.emit('Reset')
         Reset_Game_Status();
         Delete_Leader();
+        Delete_Vote_Result();
         JOINUNdelete().then((i) => {
             DBjoin_user.find({}, function(err, result) {
                 if (err) throw err
