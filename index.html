@@ -147,16 +147,16 @@
                       <button type="submit" class="submit" id="Smember">メンバー決定</button>
             </form>
             <form action="" id="Vote_A">
-                      <button type="submit" class="submit" id="Vote_A">賛成</button>
+                      <button type="submit" class="submit" id="Vote_A">賛成(未実装)</button>
             </form>
             <form action="" id="Vote_O">
-                      <button type="submit" class="submit" id="Vote_O">反対</button>
+                      <button type="submit" class="submit" id="Vote_O">反対(未実装)</button>
             </form>
             <form action="" id="Mission_S">
-                      <button type="submit" class="submit" id="Mission_S">ミッションを成功させる</button>
+                      <button type="submit" class="submit" id="Mission_S">ミッションを成功させる(未実装)</button>
             </form>
             <form action="" id="Mission_F">
-                      <button type="submit" class="submit" id="Mission_F">ミッションを失敗させる</button>
+                      <button type="submit" class="submit" id="Mission_F">ミッションを失敗させる(未実装)</button>
             </form>
         </div>
           
@@ -236,6 +236,7 @@
             });
             
             //=========メインゲーム：イベント=============
+            
             //メンバー選択処理
             $(document).on("click","#"+getCookie('Leader1'),() => {
                 $("#"+getCookie('Leader1')).toggleClass("selectedmember");
@@ -363,6 +364,25 @@
                 }                
                 return false;
             });
+            $('#Smember').submit(() => {
+                var Smember = [];
+                function Smember_emit(){
+                    var myDefer = $.Deferred();
+                    for(var i=1;i<=10;i++){
+                        if(getCookie('Smember'+i) != null){
+                            Smember[i-1] = getCookie('Smember'+i);
+                        }
+                        if(i==10){
+                            return myDefer.resolve(Smember);
+                        }
+                    }
+                };
+                Smember_emit().then((Smember) => {
+                    socket.emit('Smember_emit',Smember);
+                    console.log('選出メンバーを決定しました'+Smember);
+                });
+                return false;
+            });
             $('#Reset_All').submit(() => {
                 if(getCookiekey('joinID') != null){
                     if(window.confirm('Resetしますか？(参加者全員が強制EXITします)')){                        
@@ -390,12 +410,12 @@
                             return myDefer.promise();
                         }
                     }
-                }
+                };
                 JOINhyoji().then(() => {
                     var Leader = getCookie('Leader' + Leader_count);
                     $('#' + Leader).append('☆Leader'); //修正対象
                     for(var i=1;i<=10;i++){
-                        if(getCookie('Smember'+i) != null ){
+                        if(getCookie('Smember'+i) != null || getCookie('Smember'+i+'A') != null ){
                             $("#"+getCookie('Leader'+i)).toggleClass("selectedmember");
                         }
                     }
@@ -480,12 +500,23 @@
                 }
                 console.log('Leaderを表示しました');
             });
+            //選出メンバー表示
+            socket.on('Smember_display',(Smember) => {
+                for(var i=0;i<Smember.length;i++){
+                    document.cookie = 'Smember'+(i+1)+'A'+ '=' + encodeURIComponent(Smember[i]) + '; max-age =' + 24*60*60;
+                    if(Smember[i] != null ){
+                        $("#"+getCookie('Leader'+(i+1))).toggleClass("selectedmember");
+                    }
+                }
+                console.log('選出メンバーを受信しました'+Smember);
+            });
             //Reset
             socket.on('Roll_Reset', () => {
                 for(var i=0;i<join_count;i++){
                     document.cookie = 'Roll'+i+ '=; max-age =' + -1;
                     document.cookie = 'Leader'+(i+1)+ '=; max-age =' + -1;
                     document.cookie = 'Smember'+(i+1)+'=; max-age =' + -1;
+                    document.cookie = 'Smember'+(i+1)+'A'+'=; max-age =' + -1;
                 }
             });
             socket.on('Reset',() => {

@@ -370,6 +370,10 @@ io.on('connection', (socket) => {
                 });
             });
      });
+    socket.on('Smember_emit',(Smember) => {
+        console.log(Smember + '選出メンバーを受信しました。')
+        socket.broadcast.emit('Smember_display',Smember);
+    });
     socket.on('Reset_All',() => {
         io.emit('Roll_Reset');
         io.emit('Reset')
