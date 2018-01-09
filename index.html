@@ -91,7 +91,7 @@
     </style>
   </head>
   <body>
-      <H1>LonelyPopaye</H1>v0.0.7
+      <H1>LonelyPopaye</H1>v0.0.8
       <a href="note.html">リリースノート</a>
       <form action="" id="Timer">
             <button type="submit" class="submit" id="Timer">Timer Start!</button>
@@ -144,6 +144,8 @@
             </div>
             <li id = 'member_count'></li>
             <li id = 'game_status'></li>
+            <li id = 'MR'></li>
+            
             main_game:
             <ul id="join_members"></ul>
             <form action="" id="Smember">
@@ -156,7 +158,7 @@
                       <button type="submit" class="submit" id="Vote_O">反対</button>
             </form>
             <form action="" id="Mission_S">
-                      <button type="submit" class="submit" id="Mission_S">ミッションを成功させる(未実装)</button>
+                      <button type="submit" class="submit" id="Mission_S">ミッションを成功させる</button>
             </form>
             <form action="" id="Mission_F">
                       <button type="submit" class="submit" id="Mission_F">ミッションを失敗させる(未実装)</button>
@@ -376,28 +378,36 @@
             });
             $('#Smember').submit(() => {
                 var Smember = [];
-                function Smember_emit(){
-                    var myDefer = $.Deferred();
-                    for(var i=1;i<=10;i++){
-                        if(getCookie('Smember'+i) != null){
-                            Smember[i-1] = getCookie('Smember'+i);
+                var Leader = getCookie('Leader' + (Leader_count % join_count + 1));
+                if(Leader == getCookie('joinID')){
+                    function Smember_emit(){
+                        var myDefer = $.Deferred();
+                        for(var i=1;i<=10;i++){
+                            if(getCookie('Smember'+i) != null){
+                                Smember[i-1] = getCookie('Smember'+i);
+                                document.cookie = 'Smember'+i+'A'+ '=' + encodeURIComponent(getCookie('Smember'+i)) + '; max-age =' + 24*60*60;
+                            }
+                            if(i==10){
+                                return myDefer.resolve(Smember);
+                            }
                         }
-                        if(i==10){
-                            return myDefer.resolve(Smember);
-                        }
-                    }
-                };
-                Smember_emit().then((Smember) => {
-                    socket.emit('Smember_emit',Smember);
-                    console.log('選出メンバーを決定しました'+Smember);
-                });
+                    };
+                    Smember_emit().then((Smember) => {
+                        socket.emit('Smember_emit',Smember);
+                        console.log('選出メンバーを決定しました'+Smember);
+                    });
+                    
+                } else {
+                    window.alert('リーダーではありません');
+                }
+                
                 return false;
             });
             $('#Vote_A').submit(() => {
                 if(getCookie('INGAME') == 1 && getCookie('Vote_C') == null){
                     var Vote = {Mission: Number,
                                 Round: Number,
-                                joinID: Number,
+                                joinID: String,
                                 Vote_Result: Number,
                                 join_count: Number};
                     Vote.Mission = Mission_count;
@@ -429,6 +439,31 @@
                 }
                 return false;
             });
+            $('#Mission_S').submit(() => {
+                if(getCookie('Mission') != null){
+                    console.log('ミッションを成功させました');
+                    var Smember =0;
+                    for(var i=1;i<=10;i++){
+                        if(getCookie('Smember'+i+'A') != null){
+                            Smember ++;
+                        }
+                    }
+                    console.log('選択されたメンバー数'+Smember+'人')
+                    var MSF = {Mission: Number,
+                               joinID: String,
+                               SF: Number,
+                               Smember: Number};
+                    MSF.Mission = Mission_count;
+                    MSF.joinID = getCookie('joinID');
+                    MSF.SF = 0;
+                    MSF.Smember = Smember;
+                    document.cookie = 'Mission_C=' + encodeURIComponent(1) + '; max-age =' + 24*60*60;
+                    socket.emit('MSF',MSF);
+                } else {
+                    window.alert('ミッションメンバーではありません');
+                }
+                return false;
+            });
             $('#Reset_All').submit(() => {
                 if(getCookiekey('joinID') != null){
                     if(window.confirm('Resetしますか？(参加者全員が強制EXITします)')){                        
@@ -446,7 +481,9 @@
             //JOINユーザー表示
             socket.on('JOINhyouji', (JOIN_UNID) => {
                 console.log(JOIN_UNID + 'UNIDobj');
-                
+                $('#join_members').each(() => {
+                    $('#join_members').empty();
+                });
                 function JOINhyoji(){
                     var myDefer = $.Deferred();
                     for(var i=0;i<JOIN_UNID.length;i++){
@@ -458,8 +495,8 @@
                     }
                 };
                 JOINhyoji().then(() => {
-                    var Leader = getCookie('Leader' + Leader_count);
-                    $('#' + Leader).append('☆Leader'); //修正対象
+                    var Leader = getCookie('Leader' + (Leader_count % join_count + 1));
+                    $('#' + Leader).append('☆Leader');
                     for(var i=1;i<=10;i++){
                         if(getCookie('Smember'+i) != null || getCookie('Smember'+i+'A') != null ){
                             $("#"+getCookie('Leader'+i)).toggleClass("selectedmember");
@@ -474,6 +511,146 @@
                 Leader_count = GS.Leader;
                 $('#game_status').text('ミッション'　+　Mission_count + '　' + 'ラウンド'　+　Round_count + '　');
                 
+            });
+            //選出メンバー表示
+            socket.on('Smember_display',(Smember) => {
+                for(var i=0;i<Smember.length;i++){
+                    document.cookie = 'Smember'+(i+1)+'A'+ '=' + encodeURIComponent(Smember[i]) + '; max-age =' + 24*60*60;
+                    if(Smember[i] != null ){
+                        $("#"+getCookie('Leader'+(i+1))).toggleClass("selectedmember");
+                    }
+                }
+                console.log('選出メンバーを受信しました'+Smember);
+            });
+            //投票結果表示
+            socket.on('Vote_display',(Vote_Result) => {
+                if(getCookie('joinID') != null){
+                    console.log(Vote_Result + '投票結果を受け取りました');
+                    console.log(Vote_Result.length + '投票数');
+                    var Round_Result;
+                    var AllVote = 0;
+                    for(var i=0;i < join_count;i++){
+                        AllVote += Vote_Result[(Vote_Result.length-join_count)+i].Vote_Result;
+                        /*console.log(Vote_Result[(Vote_Result.length-join_count)+i].joinID + 'JOINID');
+                        if(Vote_Result[(Vote_Result.length-join_count)+i].Mission == Mission_count && Vote_Result[(Vote_Result.length-join_count)+i].Round == Round_count){
+                            for(var j=1;j <= 10;j++){
+                                console.log(getCookie('Leader'+j) + 'JOINIDforGetCookie');
+                                if(Vote_Result[(Vote_Result.length-join_count)+i].joinID == getCookie('Leader'+j)){
+                                    if(Vote_Result[i].Vote_Result == 1){
+                                        $('#' + getCookie('Leader'+j)).prepend('賛成');
+                                        console.log(getCookie('Leader'+j) + 'に賛成を追加します');
+                                        break;
+                                    }　else if(Vote_Result[(Vote_Result.length-join_count)+i].Vote_Result == 0){
+                                        $('#' + getCookie('Leader'+j)).prepend('反対');
+                                        console.log(getCookie('Leader'+j) + 'に反対を追加します');
+                                        break;
+                                    }
+                                }
+                            }
+                        } */
+                    }
+                    Round_Result = AllVote / join_count;
+                    console.log(Round_Result);
+                    console.log(AllVote);
+                    if(Round_Result<=0.5){
+                        console.log('選出メンバーは否決されました');
+                        if(Round_count<5){
+                            Round_count ++;
+                            Leader_count ++;
+                        } else if(Round_count>=5){
+                            Round_count = 1;
+                            Leader_count ++;
+                            Mission_count ++;
+                            var MRobj = {Mission: Mission_count,
+                                         Mission_Result: 'ポパイ',
+                                         SPY: 0}
+                            console.log('ラウンドオーバーでのミッション失敗です');
+                            socket.emit('Mission_Result',MRobj);
+                        }
+                        var GSobj = {SPY: SPY_count,
+                                     Mission: Mission_count,
+                                     Round: Round_count,
+                                     Leader: Leader_count};
+                        socket.emit('GS_Update',GSobj);
+                        for(var i=0;i<join_count;i++){
+                            document.cookie = 'Smember'+(i+1)+'=; max-age =' + -1;
+                            document.cookie = 'Smember'+(i+1)+'A'+'=; max-age =' + -1;
+                            document.cookie = 'Vote_C=; max-age =' + -1;
+                        }
+
+                    } else {
+                        console.log('選出メンバーは可決されました');
+                        for(var i=1;i<=10;i++){
+                            console.log(getCookie('Smember'+i+'A'));
+                            if(getCookie('Smember'+i+'A') == getCookie('joinID')){
+                                document.cookie = 'Mission=' + encodeURIComponent(getCookie('joinID')) + '; max-age =' + 24*60*60;
+                                console.log('ミッション結果を選択してください');
+                                break;
+                            }
+                        }
+                    }
+                }   
+            });
+            socket.on('Mission_Move',() => {
+                Round_count = 1;
+                Leader_count ++;
+                Mission_count ++;
+                var GSobj = {SPY: SPY_count,
+                             Mission: Mission_count,
+                             Round: Round_count,
+                             Leader: Leader_count};
+                socket.emit('GS_Update',GSobj);
+                for(var i=0;i<join_count;i++){
+                    document.cookie = 'Smember'+(i+1)+'=; max-age =' + -1;
+                    document.cookie = 'Smember'+(i+1)+'A'+'=; max-age =' + -1;
+                    document.cookie = 'Vote_C=; max-age =' + -1;
+                }
+                console.log('ミッション結果がそろったのでミッションを進めます');
+            });
+            socket.on('Vote_redisplay',(Vote_Result) => {
+                console.log('投票結果を再表示します');
+                setTimeout(() => {
+                    for(var i=0;i < join_count;i++){
+                        console.log(Vote_Result.length);
+                        console.log(join_count);
+                        console.log((Vote_Result.length-join_count)+i);
+                        /*if(Vote_Result[i].Mission == Mission_count && Vote_Result[i].Round == Round_count-1){*/
+                            for(var j=1;j <= 10;j++){
+                                if(Vote_Result[(Vote_Result.length-join_count)+i].joinID == getCookie('Leader'+j)){
+                                    if(Vote_Result[(Vote_Result.length-join_count)+i].Vote_Result == 1){
+                                        $('#' + getCookie('Leader'+j)).prepend('賛成');
+                                        break;
+                                    }　else if(Vote_Result[(Vote_Result.length-join_count)+i].Vote_Result == 0){
+                                        $('#' + getCookie('Leader'+j)).prepend('反対');
+                                        break;
+                                    }
+                                }
+                            }
+                        /*} else if(Vote_Result[i].Mission == Mission_count-1 && Vote_Result[i].Round == 5 && Round_count == 1){
+                            for(var j=1;j <= 10;j++){
+                                if(Vote_Result[i].joinID == getCookie('Leader'+j)){
+                                    if(Vote_Result[i].Vote_Result == 1){
+                                        $('#' + getCookie('Leader'+j)).prepend('賛成');
+                                        break;
+                                    }　else if(Vote_Result[i].Vote_Result == 0){
+                                        $('#' + getCookie('Leader'+j)).prepend('反対');
+                                        break;
+                                    }
+                                }
+                            }
+                        }*/
+                    }
+                },100);
+            });
+            //ミッション結果表示
+            socket.on('MR_display',(MR) => {
+                console.log(MR+'ミッション結果を表示します');
+                $('#MR').empty();
+                setTimeout(() => {
+                    for(var i=0;i < Mission_count-1;i++){
+                        $('#MR').append($('<li>').text('ミッション'　+　(i+1) + '　' + 'ポイント:'　+　MR[i*join_count].Mission_Result + '　' + '出荷されたポパイの数'　+　MR[i].SPY));
+                    }
+                },1000);
             });
             //SPY再表示
             socket.on('SPY_Redisplay',() => {
@@ -546,36 +723,7 @@
                 }
                 console.log('Leaderを表示しました');
             });
-            //選出メンバー表示
-            socket.on('Smember_display',(Smember) => {
-                for(var i=0;i<Smember.length;i++){
-                    document.cookie = 'Smember'+(i+1)+'A'+ '=' + encodeURIComponent(Smember[i]) + '; max-age =' + 24*60*60;
-                    if(Smember[i] != null ){
-                        $("#"+getCookie('Leader'+(i+1))).toggleClass("selectedmember");
-                    }
-                }
-                console.log('選出メンバーを受信しました'+Smember);
-            });
-            //投票結果表示
-            socket.on('Vote_display',(Vote_Result) => {
-                console.log(Vote_Result + '投票結果を受け取りました');
-                console.log(Vote_Result.length + '投票数');
-                for(var i=0;i < Vote_Result.length;i++){
-                    console.log(Vote_Result[i].joinID + 'JOINID');
-                    for(var j=1;j <= 10;j++){
-                        console.log(getCookie('Leader'+j) + 'JOINIDforGetCookie');
-                        if(Vote_Result[i].joinID == getCookie('Leader'+j)){
-                            if(Vote_Result[i].Vote_Result == 1){
-                                $('#' + getCookie('Leader'+j)).prepend('賛成');
-                                console.log(getCookie('Leader'+j) + 'に賛成を追加します')
-                            }　else if(Vote_Result[i].Vote_Result == 0){
-                                $('#' + getCookie('Leader'+j)).prepend('反対');
-                                console.log(getCookie('Leader'+j) + 'に反対を追加します')
-                            }
-                        }
-                    }
-                }
-            });
+            
             //Reset
             socket.on('Roll_Reset', () => {
                 for(var i=0;i<join_count;i++){
@@ -584,6 +732,7 @@
                     document.cookie = 'Smember'+(i+1)+'=; max-age =' + -1;
                     document.cookie = 'Smember'+(i+1)+'A'+'=; max-age =' + -1;
                     document.cookie = 'Vote_C=; max-age =' + -1;
+                    document.cookie = 'Mission=; max-age =' + -1;
                 }
             });
             socket.on('Reset',() => {
@@ -594,9 +743,11 @@
                 location.reload();
             });
             socket.on('Game_Status',(Game_Status) => {
-                document.cookie = 'INGAME =' + encodeURIComponent(Game_Status.INGAME) + '; max-age =' + 24*60*60;
-                document.cookie = 'SPY =' + encodeURIComponent(Game_Status.SPY) + '; max-age =' + 24*60*60;
-                console.log(Game_Status+'ゲームステータス');
+                if(getCookie('joinID') != null){
+                    document.cookie = 'INGAME =' + encodeURIComponent(Game_Status.INGAME) + '; max-age =' + 24*60*60;
+                    document.cookie = 'SPY =' + encodeURIComponent(Game_Status.SPY) + '; max-age =' + 24*60*60;
+                    console.log(Game_Status+'ゲームステータス');
+                }   
             });
             
             //---------ログイン関連スペース------------

@@ -47,12 +47,26 @@ var Vote_ResultSchema = new sch(
      Vote_Result: Number},
     {collection:'Vote_Result'}
 );
+var Mission_ResultSchema = new sch(
+    {Mission: Number,
+     Mission_Result: String,
+     SPY: Number},
+    {collection:'Mission_Result'}
+);
+var Mission_SFSchema = new sch(
+    {Mission: Number,
+     joinID: String,
+     SF: Number},
+    {collection:'Mission_SF'}
+);
 
 var DBusername = mongoose.model('user', usernameSchema);
 var DBjoin_user = mongoose.model('join_user', join_userSchema);
 var DBLeader = mongoose.model('Leader', LeaderSchema);
 var DBGame_Status = mongoose.model('Game_Status',Game_StatusSchema);
 var DBVote_Result = mongoose.model('Vote_Result',Vote_ResultSchema);
+var DBMission_Result = mongoose.model('Mission_Result',Mission_ResultSchema);
+var DBMission_SF = mongoose.model('Mission_SF',Mission_SFSchema);
 
 //databaseへの接続
 /*mongoose.connect('mongodb://192.168.33.10/database');*/
@@ -231,6 +245,14 @@ var GS_find = function(){
         });
     });
 };
+var Reset_Game_Status = function(){
+    DBGame_Status.remove({},(err) => {
+        if(err) console.log(err);
+        console.log('Game_Status削除完了');
+    });
+};
+
+//================Vote===================
 var Vote_SET = function(Vote){
     return new Promise(function(resolve, reject) {
         var Vote_Result = new DBVote_Result();
@@ -253,18 +275,68 @@ var Vote_find = function(){
         });
     });
 };
-var Reset_Game_Status = function(){
-    DBGame_Status.remove({},(err) => {
-        if(err) console.log(err);
-        console.log('Game_Status削除完了');
-    });
-}
 var Delete_Vote_Result = function(){
     DBVote_Result.remove({},(err) => {
         if(err) console.log(err);
         console.log('Vote_Result削除完了');
     });
-}
+};
+//================Mission_Result===================
+var Mission_Result_SET = function(MR){
+    return new Promise(function(resolve, reject) {
+        var Mission_Result = new DBMission_Result();
+        Mission_Result.Mission = MR.Mission;
+        Mission_Result.Mission_Result = MR.Mission_Result;
+        Mission_Result.SPY = MR.SPY;
+        Mission_Result.save(function(err){
+            if(err) throw err;
+            console.log('ミッション結果を保存しました');
+            resolve ();
+        });
+    });
+};
+var MR_find = function(){
+    return new Promise(function(resolve, reject) {
+        DBMission_Result.find({},function(err,docs){
+            console.log('ミッション結果を読み込みました');
+            resolve(docs);
+        });
+    });
+};
+var Delete_Mission_Result = function(){
+    DBMission_Result.remove({},(err) => {
+        if(err) console.log(err);
+        console.log('Mission_Result削除完了');
+    });
+};
+//================Vote===================
+var MSF_SET = function(MSF){
+    return new Promise(function(resolve, reject) {
+        var Mission_SF = new DBMission_SF();
+        Mission_SF.Mission = MSF.Mission;
+        Mission_SF.joinID = MSF.joinID;
+        Mission_SF.SF = MSF.SF;
+        Mission_SF.save(function(err){
+            if(err) throw err;
+            console.log('ミッション成功失敗を保存しました');
+            resolve ();
+        });
+    });
+};
+var MSF_find = function(){
+    return new Promise(function(resolve, reject) {
+        DBMission_SF.find({},function(err,docs){
+            console.log('ミッション成功失敗を読み込みました');
+            resolve(docs);
+        });
+    });
+};
+var Delete_MSF = function(){
+    DBMission_SF.remove({},(err) => {
+        if(err) console.log(err);
+        console.log('Mission_SF削除完了');
+    });
+};
 
 io.on('connection', (socket) => {
     
@@ -294,6 +366,14 @@ io.on('connection', (socket) => {
             socket.emit('SPY_Redisplay');
             });
             socket.emit('game_status_display',GS);
+            DBVote_Result.find({},(err, Vote_Result) => {
+            if (err) throw err;
+            socket.emit('Vote_redisplay',Vote_Result);
+            });
+            DBMission_Result.find({},(err, MR) => {
+            if(err) throw err;
+            socket.emit('MR_display',MR);
+            });
         }
     })
         
@@ -405,22 +485,97 @@ io.on('connection', (socket) => {
         console.log(Vote + '投票結果を受信しました。')
         Vote_SET(Vote).then(() => {
             DBVote_Result.find({},(err,Vote_Result) => {
-                /*console.log(Vote_Result + '投票結果')
-                console.log(Vote_Result.length + '投票結果')
-                console.log(Vote.join_count + '投票結果')*/
-                if(Vote_Result.length == Vote.join_count){
+                if(Vote_Result.length % Vote.join_count == 0){
                     io.emit('Vote_display',Vote_Result);
                     console.log('投票結果を送信しました');
                 }
             });
-            /*Vote_find().then((Vote_Result) => {
-                resolve(Vote_Result);
-            });
-        }).then((Vote_Result) => {
-            if(Vote_Result.length == Vote.join_count){
-                io.emit('Vote_display',Vote_Result);
-            }*/
         });
+    });
+    socket.on('MSF',(MSF) => {
+        console.log('ミッション成功失敗を受信しました');
+        var AllMSF = 0;
+        var MR;
+        MSF_SET(MSF).then(() => {
+            MSF_find().then((Mission_SF) => {
+                if(Mission_SF.length % MSF.Smember == 0){
+                    console.log('ミッションSF集計完了');
+                    socket.emit('Mission_Move');
+                    for(var i=0;i < Mission_SF.length;i++){
+                        AllMSF += Mission_SF[i].SF
+                        if(i==Mission_SF.length-1){
+                            if(AllMSF<1){
+                                MR = '小松菜';
+                                console.log('結果は小松菜');
+                            } else {
+                                MR = 'ポパイ';
+                                console.log('結果はポパイが含まれた');
+                            }
+                            var MRobj = {Mission: MSF.Mission,
+                                         Mission_Result: MR,
+                                         SPY: AllMSF}
+                            Mission_Result_SET(MRobj).then(() => {
+                                MR_find().then((MR) => {
+                                        socket.emit('MR_display',MR);
+                                        console.log('ミッション結果を送信しました');
+                                });
+                            });
+                        }
+                    }
+                }
+            });
+        });
+    });
+    socket.on('Mission_Result',(MRobj) => {
+        Mission_Result_SET(MRobj).then(() => {
+            MR_find().then((MR) => {
+                    socket.emit('MR_display',MR);
+                    console.log('ミッション結果を送信しました');
+            });
+        });
+    });
+    socket.on('GS_Update',(GSobj) => {
+        var promise = Promise.resolve();
+        promise
+            .then(() => {
+                return new Promise(function(resolve, reject) {
+                    Mission_SET(GSobj.Mission).then(() => {
+                        resolve();
+                    });
+                });
+            })
+            .then(() => {
+                return new Promise(function(resolve, reject) {
+                    Round_SET(GSobj.Round).then(() => {
+                        resolve();
+                    });
+                });
+            })
+            .then(() => {
+                return new Promise(function(resolve, reject) {
+                    Leader_SET(GSobj.Leader).then(() => {
+                        resolve();
+                    });
+                });
+            })
+            .then(() => {
+                return new Promise(function(resolve, reject) {
+                    GS_find().then((GS) => {
+                        socket.emit('game_status_display',GS);
+                        DBLeader.find({}, (err, result) => {
+                        if (err) throw err;
+                            socket.emit('JOINhyouji',result);
+                            socket.emit('SPY_Redisplay');
+                            DBVote_Result.find({},(err, Vote_Result) => {
+                            if (err) throw err;
+                                socket.emit('Vote_redisplay',Vote_Result);
+                                console.log('投票結果再表示');
+                            });
+                        });
+                        resolve();
+                    });
+                });
+            });
     });
     socket.on('Reset_All',() => {
         io.emit('Roll_Reset');
@@ -428,6 +583,7 @@ io.on('connection', (socket) => {
         Reset_Game_Status();
         Delete_Leader();
         Delete_Vote_Result();
+        Delete_Mission_Result();
         JOINUNdelete().then((i) => {
             DBjoin_user.find({}, function(err, result) {
                 if (err) throw err
