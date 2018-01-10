@@ -3,41 +3,88 @@
 <meta charset="utf-8">
     <head>
         <title>LonelyNote</title>
+        <style>
+        
+        .note {
+            border: solid 4px;
+            float: left;
+            border-color: yellow;
+            width: 50%;  /** 横幅50% **/
+            height: 50%;
+            max-height: 500px;
+            line-height: 20px;
+            overflow: scroll;
+        }
+        
+        .plan {
+            position: relative;
+            float: left;
+            border: solid 4px;
+            border-color: yellow;
+            
+            text-align: center;
+            width: 40%;  /** 横幅50% **/
+            height: 50%;
+            line-height: 20px;
+        }
+        
+        .boxA {
+            border: none;
+            &:after {
+                content: "";
+                display: block;
+                clear: both;
+            }
+        } 
+        ul {
+            padding-left: 15%;
+        }
+
+    </style>
         <a>リリース記事など</a>
+        <a href="/">戻る</a>
     </head>
     <body>
-        <div>2018/01/09 v0.0.8リリース</div>
-        <div>2018/01/09 その他いろいろ修正</div>
-        <div>2018/01/09 ミッション結果表示機能追加</div>
-        <div>2018/01/09 投票否決判定追加</div>
-        <div>2018/01/08 v0.0.7リリース</div>
-        <div>2018/01/08 投票機能追加</div>
-        <div>2018/01/08 メンバー選択機能追加</div>
-        <div>2018/01/06 メンバー選択時の色変更機能追加</div>
-        <div>2018/01/06 各種ボタン追加</div>
-        <div>2018/01/06 [β版]タイマー機能追加</div>
-        <div>2018/01/05 v0.0.6リリース</div>
-        <div>2018/01/05 リーダー表示追加</div>
-        <div>2018/01/05 ラウンド数、ミッション数表示追加</div>
-        <div>2018/01/05 スパイ表示の不具合修正</div>
-        <div>2017/12/21 v0.0.5リリース</div>
-        <div>2017/12/21 スパイ表示後並べ替え機能追加</div>
-        <div>2017/12/21 スパイ表示を修正</div>
-        <div>2017/12/19 v0.0.4リリース</div>
-        <div>2017/12/19 スパイ表示（テスト版）実装</div>
-        <div>2017/12/19 Reset_All　Start_Gameボタン追加</div>
-        <div>2017/12/18 v0.0.3リリース</div>
-        <div>2017/12/18 JOIN EXIT ボタンの処理完了</div>
-        <div>2017/12/17 EXITボタン追加</div>
-        <div>2017/12/17 massageが先頭に追加されるように変更</div>
-        <div>2017/12/16 ログアウト時、同じ文字列が含まれるアカウントの表示が同時に消えてしまう不具合を修正</div>
-        <div>2017/12/16 誰が発言したかわかるように修正(未対応)</div>
-        <div>2017/12/16 意味深なJOINボタン追加</div>
-        <div>2017/12/16 タイトル追記</div>
-        <div>2017/12/16 チャット欄追加</div>
-        <div>2017/12/16 その他いろいろ改造</div>
-        
-        
-        <a href="/">戻る</a>
+        <div class="boxA">
+            <div class="note">
+                <div>2018/01/10 v0.0.9リリース</div>
+                <div>2018/01/10 ベーシックができるようになりました（未デバッグ）</div>
+                <div>2018/01/09 v0.0.8リリース</div>
+                <div>2018/01/09 その他いろいろ修正</div>
+                <div>2018/01/09 ミッション結果表示機能追加</div>
+                <div>2018/01/09 投票否決判定追加</div>
+                <div>2018/01/08 v0.0.7リリース</div>
+                <div>2018/01/08 投票機能追加</div>
+                <div>2018/01/08 メンバー選択機能追加</div>
+                <div>2018/01/06 メンバー選択時の色変更機能追加</div>
+                <div>2018/01/06 各種ボタン追加</div>
+                <div>2018/01/06 [β版]タイマー機能追加</div>
+                <div>2018/01/05 v0.0.6リリース</div>
+                <div>2018/01/05 リーダー表示追加</div>
+                <div>2018/01/05 ラウンド数、ミッション数表示追加</div>
+                <div>2018/01/05 スパイ表示の不具合修正</div>
+                <div>2017/12/21 v0.0.5リリース</div>
+                <div>2017/12/21 スパイ表示後並べ替え機能追加</div>
+                <div>2017/12/21 スパイ表示を修正</div>
+                <div>2017/12/19 v0.0.4リリース</div>
+                <div>2017/12/19 スパイ表示（テスト版）実装</div>
+                <div>2017/12/19 Reset_All　Start_Gameボタン追加</div>
+                <div>2017/12/18 v0.0.3リリース</div>
+                <div>2017/12/18 JOIN EXIT ボタンの処理完了</div>
+                <div>2017/12/17 EXITボタン追加</div>
+                <div>2017/12/17 massageが先頭に追加されるように変更</div>
+                <div>2017/12/16 ログアウト時、同じ文字列が含まれるアカウントの表示が同時に消えてしまう不具合を修正</div>
+                <div>2017/12/16 誰が発言したかわかるように修正(未対応)</div>
+                <div>2017/12/16 意味深なJOINボタン追加</div>
+                <div>2017/12/16 タイトル追記</div>
+                <div>2017/12/16 チャット欄追加</div>
+                <div>2017/12/16 その他いろいろ改造</div>
+            </div>
+            <div class="plan">
+                <H1>今後の予定</H1>
+                <div>各種履歴追加</div>
+                <div>ゲームメッセージBOX追加</div>
+            </div>
+        </div>
     </body>
 </html>

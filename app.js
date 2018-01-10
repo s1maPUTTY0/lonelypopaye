@@ -240,7 +240,7 @@ var Leader_SET = function(Leader){
 var GS_find = function(){
     return new Promise(function(resolve, reject) {
         DBGame_Status.find({},function(err,docs){
-            console.log(docs[0] + 'ゲームステータスを読み込みました');
+            console.log('ゲームステータスを読み込みました');
             resolve(docs[0]);
         });
     });
@@ -492,6 +492,7 @@ io.on('connection', (socket) => {
             });
         });
     });
+    //ミッション成否
     socket.on('MSF',(MSF) => {
         console.log('ミッション成功失敗を受信しました');
         var AllMSF = 0;
@@ -505,6 +506,9 @@ io.on('connection', (socket) => {
                         AllMSF += Mission_SF[i].SF
                         if(i==Mission_SF.length-1){
                             if(AllMSF<1){
+                                MR = '小松菜';
+                                console.log('結果は小松菜');
+                            } else if(AllMSF == 1 && Mission_SF.Mission == 4){
                                 MR = '小松菜';
                                 console.log('結果は小松菜');
                             } else {
@@ -584,6 +588,7 @@ io.on('connection', (socket) => {
         Delete_Leader();
         Delete_Vote_Result();
         Delete_Mission_Result();
+        Delete_MSF();
         JOINUNdelete().then((i) => {
             DBjoin_user.find({}, function(err, result) {
                 if (err) throw err
