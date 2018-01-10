@@ -465,7 +465,7 @@
                 }
             });
             $('#join').submit(() => {
-                if(getCookiekey('joinID') == null ){
+                if(getCookiekey('joinID') == null && Mission_count == null){
                     var data = getCookie('username');
                     if(data == null){                    
                         window.alert('ログインしてください'); 
@@ -476,13 +476,15 @@
                         console.log(getCookie('username') + 'JOIN名を送信しました');
                         window.alert('JOINしました');
                     }
-                } else {
+                } else if(getCookiekey('joinID') != null){
                     window.alert('JOIN中です');
+                } else {
+                    window.alert('ゲーム中です');
                 }
                 return false;
             });
             $('#exit').submit(() => {
-                if(getCookiekey('joinID') != null){                    
+                if(getCookiekey('joinID') != null && getCookie('INGAME') != 1){                    
                     $('#' + getCookie('joinID')).remove();
                     socket.emit('exit', {joinID:getCookie('joinID')});
                     window.alert('EXITしました');
