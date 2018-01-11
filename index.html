@@ -590,7 +590,7 @@
                 return false;
             });
             $('#Mission_S').submit(() => {
-                if(getCookie('Mission') != null && getCookie('Mission_C') == null){
+                if(getCookie('Mission') != null && getCookie('Mission_C') == null && getCookie('Vote_C') != null){
                     console.log('ミッションを成功させました');
                     var Smember =0;
                     for(var i=1;i<=10;i++){
@@ -615,7 +615,7 @@
                 return false;
             });
             $('#Mission_F').submit(() => {
-                if(getCookie('Mission') != null && getCookie('Mission_C') == null){
+                if(getCookie('Mission') != null && getCookie('Mission_C') == null && getCookie('Vote_C') != null){
                     console.log('ミッションを成功させました');
                     var Smember =0;
                     for(var i=1;i<=10;i++){
