@@ -806,8 +806,8 @@
                 console.log(MR+'ミッション結果を表示します');
                 document.cookie = 'Vote_C=; max-age =' + -1;
                 document.cookie = 'SA=; max-age =' + -1;
-                console.log(MR[Mission_count-1].PointS+'ポパイの得点');
-                console.log(MR[Mission_count-1].PointR+'小松菜の得点');
+                console.log(MR[Mission_count].PointS+'ポパイの得点');
+                console.log(MR[Mission_count].PointR+'小松菜の得点');
                 $('#MR').empty();
                 setTimeout(() => {
                     for(var i=0;i < Mission_count-1;i++){
