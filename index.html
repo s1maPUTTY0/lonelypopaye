@@ -608,6 +608,7 @@
                     MSF.SF = 0;　//ミッション成否
                     MSF.Smember = Smember;
                     document.cookie = 'Mission_C=' + encodeURIComponent(1) + '; max-age =' + 24*60*60;
+                    document.cookie = 'Mission=; max-age =' + -1;
                     socket.emit('MSF',MSF);
                 } else {
                     window.alert('ミッションメンバーではありません');
@@ -633,6 +634,7 @@
                     MSF.SF = 1;　//ミッション成否
                     MSF.Smember = Smember;
                     document.cookie = 'Mission_C=' + encodeURIComponent(1) + '; max-age =' + 24*60*60;
+                    document.cookie = 'Mission=; max-age =' + -1;
                     socket.emit('MSF',MSF);
                 } else {
                     window.alert('ミッションメンバーではありません');
