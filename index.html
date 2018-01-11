@@ -277,8 +277,8 @@
             */
             function Smember_limit(){
                 var SL;
-                console.log(join_count+'SL');
-                console.log(Mission_count+'SL');
+                /*console.log(join_count+'SL');
+                console.log(Mission_count+'SL');*/
                 if(join_count<5){
                     switch(Mission_count){
                         case 1:
@@ -704,6 +704,7 @@
                     document.cookie = 'Smember'+(i+1)+'A'+ '=' + encodeURIComponent(Smember[i]) + '; max-age =' + 24*60*60;
                     if(Smember[i] != null ){
                         $("#"+getCookie('Leader'+(i+1))).toggleClass("selectedmember");
+                        console.log('選出メンバーを表示します'+Smember[i]);
                     }
                 }
                 console.log('選出メンバーを受信しました'+Smember);
