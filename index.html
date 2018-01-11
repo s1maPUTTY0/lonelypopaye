@@ -814,7 +814,7 @@
                     for(var i=0;i < Mission_count-1;i++){
                         $('#MR').append($('<li>').text('ミッション'　+　(i+1) + '　' + 'ポイント:'　+　MR[i].Mission_Result + '　' + '出荷されたポパイの数'　+　MR[i].SPY));
                     }
-                },1000);
+                },1500);
             });
             //SPY再表示
             socket.on('SPY_Redisplay',() => {
