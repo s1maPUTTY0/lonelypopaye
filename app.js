@@ -507,7 +507,7 @@ io.on('connection', (socket) => {
             MSF_find().then((Mission_SF) => {
                 if(Mission_SF.length % MSF.Smember == 0){
                     console.log('ミッションSF集計完了');
-                    socket.emit('Mission_Move');
+                    io.emit('Mission_Move');
                     for(var i=0;i < Mission_SF.length;i++){
                         AllMSF += Mission_SF[i].SF
                         AllPointS += Mission_SF[i].PointS;
