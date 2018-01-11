@@ -475,7 +475,6 @@
                     } else {
                         socket.emit('join',{username:getCookie('username')});
                         console.log(getCookie('username') + 'JOIN名を送信しました');
-                        window.alert('JOINしました');
                     }
                 } else if(getCookiekey('joinID') != null){
                     window.alert('JOIN中です');
