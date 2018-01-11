@@ -35,13 +35,14 @@
         }
         
         .main_game {
+            list-style:none;
             position: relative;
             float: left;
             border: solid 4px;
             border-color: yellow;
             
             text-align: center;
-            width: 60%;  /** 横幅50% **/
+            width: 60%;
             height: 50%;
             line-height: 20px;
         }
@@ -63,9 +64,6 @@
                 display: block;
                 clear: both;
             }
-        } 
-        ul {
-            padding-left: 15%;
         }
         .Reset_All{
             position:absolute;
@@ -87,6 +85,9 @@
         }
         .hidden{
             display: none;
+        }
+        .join_black{
+            list-style:none;
         }
     </style>
   </head>
@@ -147,7 +148,7 @@
             <li id = 'MR'></li>
             
             main_game:
-            <ul id="join_members"></ul>
+            <ul id="join_members" class="join_black"></ul>
             <div>
                 <li id='info'></li>
             </div>
