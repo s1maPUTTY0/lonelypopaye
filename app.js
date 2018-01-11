@@ -506,6 +506,8 @@ io.on('connection', (socket) => {
         var AllMSF = 0;
         var AllPointS = 0;
         var AllPointR = 0;
+        var MRPointS = 0;
+        var MRPointR = 0;
         var MR;
         MSF_SET(MSF).then(() => {
             MSF_find().then((Mission_SF) => {
@@ -514,8 +516,6 @@ io.on('connection', (socket) => {
                     io.emit('Mission_Move');
                     for(var i=0;i < Mission_SF.length;i++){
                         AllMSF += Mission_SF[i].SF
-                        AllPointS += Mission_SF[i].PointS;
-                        AllPointR += Mission_SF[i].PointR;
                         if(i==Mission_SF.length-1){
                             if(AllMSF<1){
                                 MR = '小松菜';
@@ -530,8 +530,8 @@ io.on('connection', (socket) => {
                                 Mission_SF[i].PointS ++;
                                 console.log('結果はポパイが含まれた');
                             }
-                            AllPointS += Mission_SF[i].PointS;
-                            AllPointR += Mission_SF[i].PointR;
+                            AllPointS = Mission_SF[i].PointS;
+                            AllPointR = Mission_SF[i].PointR;
                             var MRobj = {Mission: MSF.Mission,
                                          Mission_Result: MR,
                                          SPY: AllMSF,
@@ -542,8 +542,18 @@ io.on('connection', (socket) => {
                                         io.emit('MR_display',MR);
                                         Delete_MSF();
                                         console.log('ミッション結果を送信しました');
-                                        console.log(MRobj.PointS+'スパイ結果');
-                                        console.log(MRobj.PointR+'レジ結果');
+                                        for(var j=0;j < MR.length;j++){
+                                            MRPointS += MR[j].PointS;
+                                            MRPointR += MR[j].PointR;
+                                            if(j==MR.length-1){
+                                                var Point = {MRPointS: MRPointS,
+                                                             MRPointR: MRPointR};
+                                                console.log(Point.MRPointS+'スパイ結果');
+                                                console.log(Point.MRPointR+'レジ結果');
+                                                io.emit('Point',Point);
+                                            }
+                                        }
+                                        
                                 });
                             });
                         }

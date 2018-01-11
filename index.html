@@ -247,6 +247,8 @@
             var Round_count;
             var Leader_count;
             var Game_STEP;
+            var SPY_Point;
+            var Redi_Point;
              
             $('#SPY_count').change(() => {
                 SPY_count = $('#SPY_count').val();
@@ -820,6 +822,11 @@
                     }
                 },1500);
             });
+            //勝利ポイント
+            socket.on('Point',(Point) => {
+                document.cookie = 'SPY_Point=' + encodeURIComponent(Point.MRPointS) + '; max-age =' + 24*60*60;
+                document.cookie = 'Redi_Point=' + encodeURIComponent(Point.MRPointR) + '; max-age =' + 24*60*60;
+            });
             //SPY再表示
             socket.on('SPY_Redisplay',() => {
                 if(getCookie('Roll0') != null ){
@@ -834,7 +841,7 @@
                         SPY_count = getCookie('SPY');
                         console.log('SPYは' + SPY_count + '人です');
                     }
-                    if(Roll_count < SPY_count || Mission_count >= 6){
+                    if(Roll_count < SPY_count || Mission_count >= 6 || getCookie('SPY_Point')>=3 || getCookie('Redi_Point')>=3){
                         for(var i=0;i<SPY_count;i++){
                             $('#'+getCookie('Roll'+i)).css('color','red');
                             console.log('SPYを再表示しました');
@@ -903,6 +910,8 @@
                     document.cookie = 'Mission=; max-age =' + -1;
                     document.cookie = 'Mission_C=; max-age =' + -1;
                     document.cookie = 'SA=; max-age =' + -1;
+                    document.cookie = 'SPY_Point=; max-age =' + -1;
+                    document.cookie = 'Redi_Point=; max-age =' + -1;
                 }
             });
             socket.on('Reset',() => {
