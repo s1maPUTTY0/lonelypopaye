@@ -292,8 +292,8 @@ var Mission_Result_SET = function(MR){
         Mission_Result.Mission = MR.Mission;
         Mission_Result.Mission_Result = MR.Mission_Result;
         Mission_Result.SPY = MR.SPY;
-        Mission_SF.PointS = MR.PointS;
-        Mission_SF.PointR = MR.PointR;
+        Mission_Result.PointS = MR.PointS;
+        Mission_Result.PointR = MR.PointR;
         Mission_Result.save(function(err){
             if(err) throw err;
             console.log('ミッション結果を保存しました');
@@ -540,6 +540,7 @@ io.on('connection', (socket) => {
                             Mission_Result_SET(MRobj).then(() => {
                                 MR_find().then((MR) => {
                                         io.emit('MR_display',MR);
+                                        Delete_MSF();
                                         console.log('ミッション結果を送信しました');
                                         console.log(MRobj.PointS+'スパイ結果');
                                         console.log(MRobj.PointR+'レジ結果');
