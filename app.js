@@ -502,7 +502,7 @@ io.on('connection', (socket) => {
     });
     //ミッション成否
     socket.on('MSF',(MSF) => {
-        console.log('ミッション成功失敗を受信しました');
+        console.log(MSF.Smember+'ミッション成功失敗を受信しました');
         var AllMSF = 0;
         var AllPointS = 0;
         var AllPointR = 0;
