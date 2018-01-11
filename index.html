@@ -659,17 +659,12 @@
                 $('#join_members').each(() => {
                     $('#join_members').empty();
                 });
-                function JOINhyoji(){
-                    var myDefer = $.Deferred();
-                    for(var i=0;i<JOIN_UNID.length;i++){
-                        $('#join_members').append($('<li id = ' + JOIN_UNID[i]._id + '>').text(JOIN_UNID[i].username));
-                        if(i==JOIN_UNID.length-1){
-                            myDefer.resolve();
-                            return myDefer.promise();
-                        }
+                for(var i=0;i<JOIN_UNID.length;i++){
+                    $('#join_members').append($('<li id = ' + JOIN_UNID[i]._id + '>').text(JOIN_UNID[i].username));
+                    if(i==JOIN_UNID.length-1){
                     }
-                };
-                JOINhyoji().then(() => {
+                }
+                setTimeout(() => {
                     var Leader = getCookie('Leader' + (Leader_count % join_count + 1));
                     $('#' + Leader).append('☆Leader');
                     for(var i=1;i<=10;i++){
@@ -677,7 +672,7 @@
                             $("#"+getCookie('Leader'+i)).toggleClass("selectedmember");
                         }
                     }
-                });      
+                },500);      
             });
             //Game_Status表示
             socket.on('game_status_display',(GS) => {
