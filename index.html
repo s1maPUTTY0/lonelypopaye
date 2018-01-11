@@ -806,14 +806,12 @@
                 console.log(MR+'ミッション結果を表示します');
                 document.cookie = 'Vote_C=; max-age =' + -1;
                 document.cookie = 'SA=; max-age =' + -1;
+                console.log(MR[Mission_count-1].PointS+'ポパイの得点');
+                console.log(MR[Mission_count-1].PointR+'小松菜の得点');
                 $('#MR').empty();
                 setTimeout(() => {
                     for(var i=0;i < Mission_count-1;i++){
                         $('#MR').append($('<li>').text('ミッション'　+　(i+1) + '　' + 'ポイント:'　+　MR[i].Mission_Result + '　' + '出荷されたポパイの数'　+　MR[i].SPY));
-                        if(i==Mission_count-2){
-                            console.log(MR[i].PointS+'ポパイの得点');
-                            console.log(MR[i].PointR+'小松菜の得点');
-                        }
                     }
                 },1000);
             });

@@ -50,7 +50,9 @@ var Vote_ResultSchema = new sch(
 var Mission_ResultSchema = new sch(
     {Mission: Number,
      Mission_Result: String,
-     SPY: Number},
+     SPY: Number,
+     PointS: Number,
+     PointR: Number},
     {collection:'Mission_Result'}
 );
 var Mission_SFSchema = new sch(
@@ -290,6 +292,8 @@ var Mission_Result_SET = function(MR){
         Mission_Result.Mission = MR.Mission;
         Mission_Result.Mission_Result = MR.Mission_Result;
         Mission_Result.SPY = MR.SPY;
+        Mission_SF.PointS = MR.PointS;
+        Mission_SF.PointR = MR.PointR;
         Mission_Result.save(function(err){
             if(err) throw err;
             console.log('ミッション結果を保存しました');
