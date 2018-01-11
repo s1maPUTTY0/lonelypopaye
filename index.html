@@ -550,7 +550,7 @@
                 return false;
             });
             $('#Vote_A').submit(() => {
-                if(getCookie('INGAME') == 1 && getCookie('Vote_C') == null && getCookie('Smember1A') != null){
+                if(getCookie('INGAME') == 1 && getCookie('Vote_C') == null && getCookie('Mission') == null && getCookie('Smember1A') != null){
                     var Vote = {Mission: Number,
                                 Round: Number,
                                 joinID: String,
@@ -570,7 +570,7 @@
                 return false;
             });
             $('#Vote_O').submit(() => {
-                if(getCookie('INGAME') == 1 && getCookie('Vote_C') == null && getCookie('Smember1A') != null){
+                if(getCookie('INGAME') == 1 && getCookie('Vote_C') == null && getCookie('Mission') == null && getCookie('Smember1A') != null){
                     var Vote = {Mission: Number,
                                 Round: Number,
                                 joinID: String,
