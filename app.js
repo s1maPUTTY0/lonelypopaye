@@ -56,7 +56,9 @@ var Mission_ResultSchema = new sch(
 var Mission_SFSchema = new sch(
     {Mission: Number,
      joinID: String,
-     SF: Number},
+     SF: Number,
+     PointS: Number,
+     PointR: Number},
     {collection:'Mission_SF'}
 );
 
@@ -316,6 +318,8 @@ var MSF_SET = function(MSF){
         Mission_SF.Mission = MSF.Mission;
         Mission_SF.joinID = MSF.joinID;
         Mission_SF.SF = MSF.SF;
+        Mission_SF.PointS = MSF.PointS;
+        Mission_SF.PointR = MSF.PointR;
         Mission_SF.save(function(err){
             if(err) throw err;
             console.log('ミッション成功失敗を保存しました');
@@ -496,6 +500,8 @@ io.on('connection', (socket) => {
     socket.on('MSF',(MSF) => {
         console.log('ミッション成功失敗を受信しました');
         var AllMSF = 0;
+        var AllPointS = 0;
+        var AllPointR = 0;
         var MR;
         MSF_SET(MSF).then(() => {
             MSF_find().then((Mission_SF) => {
@@ -504,24 +510,35 @@ io.on('connection', (socket) => {
                     socket.emit('Mission_Move');
                     for(var i=0;i < Mission_SF.length;i++){
                         AllMSF += Mission_SF[i].SF
+                        AllPointS += Mission_SF[i].PointS;
+                        AllPointR += Mission_SF[i].PointR;
                         if(i==Mission_SF.length-1){
                             if(AllMSF<1){
                                 MR = '小松菜';
+                                Mission_SF[i].PointR ++;
                                 console.log('結果は小松菜');
                             } else if(AllMSF == 1 && Mission_SF.Mission == 4){
                                 MR = '小松菜';
+                                Mission_SF[i].PointR ++;
                                 console.log('結果は小松菜');
                             } else {
                                 MR = 'ポパイ';
+                                Mission_SF[i].PointS ++;
                                 console.log('結果はポパイが含まれた');
                             }
+                            AllPointS += Mission_SF[i].PointS;
+                            AllPointR += Mission_SF[i].PointR;
                             var MRobj = {Mission: MSF.Mission,
                                          Mission_Result: MR,
-                                         SPY: AllMSF}
+                                         SPY: AllMSF,
+                                         PointS: AllPointS,
+                                         PointR: AllPointR}
                             Mission_Result_SET(MRobj).then(() => {
                                 MR_find().then((MR) => {
-                                        socket.emit('MR_display',MR);
+                                        io.emit('MR_display',MR);
                                         console.log('ミッション結果を送信しました');
+                                        console.log(MRobj.PointS+'スパイ結果');
+                                        console.log(MRobj.PointR+'レジ結果');
                                 });
                             });
                         }

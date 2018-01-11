@@ -337,7 +337,7 @@
             //メンバー選択処理
             $(document).on("click","#"+getCookie('Leader1'),() => {
                 var Leader = getCookie('Leader' + (Leader_count % join_count + 1));
-                if(Leader == getCookie('joinID') && getCookie('Smember1A') == null){
+                if(Leader == getCookie('joinID') && getCookie('SA') == null){
                     $("#"+getCookie('Leader1')).toggleClass("selectedmember");
                     if(getCookie('Smember1') == null){
                         document.cookie = 'Smember1=' + encodeURIComponent(getCookie('Leader1')) + '; max-age =' + 24*60*60;
@@ -521,13 +521,14 @@
                     }
                 }
                 var Leader = getCookie('Leader' + (Leader_count % join_count + 1));
-                if(Leader == getCookie('joinID') && getCookie('Smember1A') == null && Smember_count == Smember_limit()){
+                if(Leader == getCookie('joinID') && getCookie('SA') == null && Smember_count == Smember_limit()){
                     function Smember_emit(){
                         var myDefer = $.Deferred();
                         for(var i=1;i<=10;i++){
                             if(getCookie('Smember'+i) != null){
                                 Smember[i-1] = getCookie('Smember'+i);
                                 document.cookie = 'Smember'+i+'A'+ '=' + encodeURIComponent(getCookie('Smember'+i)) + '; max-age =' + 24*60*60;
+                                document.cookie = 'SA=' + encodeURIComponent(1) + '; max-age =' + 24*60*60;
                             }
                             if(i==10){
                                 return myDefer.resolve(Smember);
@@ -541,7 +542,7 @@
                     
                 } else if(Leader != getCookie('joinID')){
                     window.alert('リーダーではありません');
-                } else if(getCookie('Smember1A') != null){
+                } else if(getCookie('SA') != null){
                     window.alert('メンバーは選出済みです');
                 } else if(Smember_count != Smember_limit){
                     window.alert('選出人数が違います');
@@ -550,7 +551,7 @@
                 return false;
             });
             $('#Vote_A').submit(() => {
-                if(getCookie('INGAME') == 1 && getCookie('Vote_C') == null && getCookie('Mission') == null && getCookie('Smember1A') != null){
+                if(getCookie('INGAME') == 1 && getCookie('Vote_C') == null && getCookie('Mission') == null && getCookie('SA') != null){
                     var Vote = {Mission: Number,
                                 Round: Number,
                                 joinID: String,
@@ -564,13 +565,13 @@
                     socket.emit('Vote',Vote);
                     document.cookie = 'Vote_C=' + encodeURIComponent(1) + '; max-age =' + 24*60*60;
                     console.log('投票しました');
-                } else if(getCookie('Smember1A') == null){
+                } else if(getCookie('SA') == null){
                     window.alert('メンバーが選出されていません');
                 }
                 return false;
             });
             $('#Vote_O').submit(() => {
-                if(getCookie('INGAME') == 1 && getCookie('Vote_C') == null && getCookie('Mission') == null && getCookie('Smember1A') != null){
+                if(getCookie('INGAME') == 1 && getCookie('Vote_C') == null && getCookie('Mission') == null && getCookie('SA') != null){
                     var Vote = {Mission: Number,
                                 Round: Number,
                                 joinID: String,
@@ -584,7 +585,7 @@
                     socket.emit('Vote',Vote);
                     document.cookie = 'Vote_C=' + encodeURIComponent(0) + '; max-age =' + 24*60*60;
                     console.log('投票しました');
-                } else if(getCookie('Smember1A') == null){
+                } else if(getCookie('SA') == null){
                     window.alert('メンバーが選出されていません');
                 }
                 return false;
@@ -602,10 +603,14 @@
                     var MSF = {Mission: Number,
                                joinID: String,
                                SF: Number,
+                               PointS: Number,
+                               PointR: Number,
                                Smember: Number};
                     MSF.Mission = Mission_count;
                     MSF.joinID = getCookie('joinID');
                     MSF.SF = 0;　//ミッション成否
+                    MSF.PointS = 0;
+                    MSF.PointR = 0;
                     MSF.Smember = Smember;
                     document.cookie = 'Mission_C=' + encodeURIComponent(1) + '; max-age =' + 24*60*60;
                     document.cookie = 'Mission=; max-age =' + -1;
@@ -628,10 +633,14 @@
                     var MSF = {Mission: Number,
                                joinID: String,
                                SF: Number,
+                               PointS: Number,
+                               PointR: Number,
                                Smember: Number};
                     MSF.Mission = Mission_count;
                     MSF.joinID = getCookie('joinID');
-                    MSF.SF = 1;　//ミッション成否
+                    MSF.SF = 1;　//ミッション成否                    
+                    MSF.PointS = 0;
+                    MSF.PointR = 0;
                     MSF.Smember = Smember;
                     document.cookie = 'Mission_C=' + encodeURIComponent(1) + '; max-age =' + 24*60*60;
                     document.cookie = 'Mission=; max-age =' + -1;
@@ -690,6 +699,7 @@
             });
             //選出メンバー表示
             socket.on('Smember_display',(Smember) => {
+                document.cookie = 'SA=' + encodeURIComponent(1) + '; max-age =' + 24*60*60;
                 for(var i=0;i<Smember.length;i++){
                     document.cookie = 'Smember'+(i+1)+'A'+ '=' + encodeURIComponent(Smember[i]) + '; max-age =' + 24*60*60;
                     if(Smember[i] != null ){
@@ -735,6 +745,7 @@
                             document.cookie = 'Smember'+(i+1)+'=; max-age =' + -1;
                             document.cookie = 'Smember'+(i+1)+'A'+'=; max-age =' + -1;
                             document.cookie = 'Vote_C=; max-age =' + -1;
+                            document.cookie = 'SA=; max-age =' + -1;
                         }
 
                     } else {
@@ -793,10 +804,15 @@
             //ミッション結果表示
             socket.on('MR_display',(MR) => {
                 console.log(MR+'ミッション結果を表示します');
+                
                 $('#MR').empty();
                 setTimeout(() => {
                     for(var i=0;i < Mission_count-1;i++){
                         $('#MR').append($('<li>').text('ミッション'　+　(i+1) + '　' + 'ポイント:'　+　MR[i*join_count].Mission_Result + '　' + '出荷されたポパイの数'　+　MR[i].SPY));
+                        if(i==Mission_count-2){
+                            console.log(MR[i].PointS+'ポパイの得点');
+                            console.log(MR[i].PointR+'小松菜の得点');
+                        }
                     }
                 },1000);
             });
@@ -882,6 +898,7 @@
                     document.cookie = 'Vote_C=; max-age =' + -1;
                     document.cookie = 'Mission=; max-age =' + -1;
                     document.cookie = 'Mission_C=; max-age =' + -1;
+                    document.cookie = 'SA=; max-age =' + -1;
                 }
             });
             socket.on('Reset',() => {
