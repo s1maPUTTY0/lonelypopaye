@@ -595,9 +595,10 @@
                     console.log('ミッションを成功させました');
                     var Smember =0;
                     for(var i=1;i<=10;i++){
-                        if(getCookie('Smember'+i+'A') != null){
+                        if(getCookie('Smember'+i+'A') != null && getCookie('Smember'+i+'A') != 'null'){
+                            console.log(getCookie('Smember'+i+'A'));
                             Smember ++;
-                        }
+                        }  
                     }
                     console.log('選択されたメンバー数'+Smember+'人')
                     var MSF = {Mission: Number,
@@ -622,12 +623,14 @@
             });
             $('#Mission_F').submit(() => {
                 if(getCookie('Mission') != null && getCookie('Mission_C') == null && getCookie('Vote_C') != null){
-                    console.log('ミッションを成功させました');
+                    console.log('ミッションを失敗させました');
                     var Smember =0;
                     for(var i=1;i<=10;i++){
-                        if(getCookie('Smember'+i+'A') != null){
+                        if(getCookie('Smember'+i+'A') != null && getCookie('Smember'+i+'A') != 'null'){
+                            console.log('メンバー検出');
+                            console.log(getCookie('Smember'+i+'A'));
                             Smember ++;
-                        }
+                        } 
                     }
                     console.log('選択されたメンバー数'+Smember+'人')
                     var MSF = {Mission: Number,
@@ -679,7 +682,7 @@
                     var Leader = getCookie('Leader' + (Leader_count % join_count + 1));
                     $('#' + Leader).append('☆Leader');
                     for(var i=1;i<=10;i++){
-                        if(getCookie('Smember'+i) != null || getCookie('Smember'+i+'A') != null ){
+                        if(getCookie('Smember'+i) != null || (getCookie('Smember'+i+'A') != null && getCookie('Smember'+i+'A') != 'null')){
                             $("#"+getCookie('Leader'+i)).toggleClass("selectedmember");
                         }
                     }
