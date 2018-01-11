@@ -683,7 +683,7 @@
                             $("#"+getCookie('Leader'+i)).toggleClass("selectedmember");
                         }
                     }
-                },500);      
+                },1000);      
             });
             //Game_Status表示
             socket.on('game_status_display',(GS) => {
@@ -799,17 +799,18 @@
                                 }
                             }
                     }
-                },100);
+                },1000);
             });
             //ミッション結果表示
             socket.on('MR_display',(MR) => {
                 console.log(MR+'ミッション結果を表示します');
                 document.cookie = 'Vote_C=; max-age =' + -1;
                 document.cookie = 'SA=; max-age =' + -1;
-                console.log(MR[Mission_count].PointS+'ポパイの得点');
-                console.log(MR[Mission_count].PointR+'小松菜の得点');
+                
                 $('#MR').empty();
                 setTimeout(() => {
+                    console.log(MR[Mission_count].PointS+'ポパイの得点');
+                    console.log(MR[Mission_count].PointR+'小松菜の得点');
                     for(var i=0;i < Mission_count-1;i++){
                         $('#MR').append($('<li>').text('ミッション'　+　(i+1) + '　' + 'ポイント:'　+　MR[i].Mission_Result + '　' + '出荷されたポパイの数'　+　MR[i].SPY));
                     }
