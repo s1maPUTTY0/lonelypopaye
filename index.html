@@ -809,8 +809,8 @@
                 
                 $('#MR').empty();
                 setTimeout(() => {
-                    console.log(MR[Mission_count-1].PointS+'ポパイの得点');
-                    console.log(MR[Mission_count-1].PointR+'小松菜の得点');
+                    /*console.log(MR[Mission_count-1].PointS+'ポパイの得点');
+                    console.log(MR[Mission_count-1].PointR+'小松菜の得点');*/
                     for(var i=0;i < Mission_count-1;i++){
                         $('#MR').append($('<li>').text('ミッション'　+　(i+1) + '　' + 'ポイント:'　+　MR[i].Mission_Result + '　' + '出荷されたポパイの数'　+　MR[i].SPY));
                     }
