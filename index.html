@@ -782,7 +782,7 @@
                              Round: Round_count,
                              Leader: Leader_count};
                 socket.emit('GS_Update',GSobj);
-                for(var i=0;i<join_count;i++){
+                for(var i=0;i<10;i++){
                     document.cookie = 'Smember'+(i+1)+'=; max-age =' + -1;
                     document.cookie = 'Smember'+(i+1)+'A'+'=; max-age =' + -1;
                     document.cookie = 'Vote_C=; max-age =' + -1;
@@ -900,7 +900,7 @@
             
             //Reset
             socket.on('Roll_Reset', () => {
-                for(var i=0;i<join_count;i++){
+                for(var i=0;i<10;i++){
                     document.cookie = 'Roll'+i+ '=; max-age =' + -1;
                     document.cookie = 'Leader'+(i+1)+ '=; max-age =' + -1;
                     document.cookie = 'Smember'+(i+1)+'=; max-age =' + -1;
