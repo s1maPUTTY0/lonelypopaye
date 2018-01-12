@@ -787,6 +787,7 @@
                     document.cookie = 'Smember'+(i+1)+'A'+'=; max-age =' + -1;
                     document.cookie = 'Vote_C=; max-age =' + -1;
                     document.cookie = 'Mission_C=' + encodeURIComponent(1) + '; max-age =' + -1;
+                    document.cookie = 'SA=; max-age =' + -1;
                 }
                 console.log('ミッション結果がそろったのでミッションを進めます');
             });
@@ -811,9 +812,6 @@
             //ミッション結果表示
             socket.on('MR_display',(MR) => {
                 console.log(MR+'ミッション結果を表示します');
-                document.cookie = 'Vote_C=; max-age =' + -1;
-                document.cookie = 'SA=; max-age =' + -1;
-                
                 $('#MR').empty();
                 setTimeout(() => {
                     /*console.log(MR[Mission_count-1].PointS+'ポパイの得点');
