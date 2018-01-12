@@ -401,7 +401,7 @@ io.on('connection', (socket) => {
         });        
     });
     socket.on('exit', (data) => {
-        socket.emit('JOINUNsakujo',data.joinID);
+        io.emit('JOINUNsakujo',data.joinID);
         JOINUNdelete(data.joinID).then((i) => {
             DBjoin_user.find({}, function(err, result) {
                 if (err) throw err
