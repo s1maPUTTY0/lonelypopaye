@@ -173,7 +173,7 @@
           
         <div class="chat_space">
             <form action="" id="chat" >
-                コメント(未実装)：<input id="msg" autocomplete="off" /><button>Send</button>
+                コメント：<input id="msg" autocomplete="off" /><button>Send</button>
             </form>
             massage(ブラウザ更新で消えます):
             <ul id="messages"></ul>
@@ -987,14 +987,15 @@
             //---------チャット関連スペース------------
             //チャットメッセージ送信
             $('#chat').submit(() => {
-                socket.emit('chat message', $('#msg').val());
+                var msg = {loginID: getCookie('username'),msg: $('#msg').val()};
+                socket.emit('chat message', msg);
                 console.log('send message');
                 $('#msg').val('');
                 return false;
             });
             //チャットメッセージ受信
             socket.on('chat message', (msg) => {
-                $('#messages').prepend($('<li>').text(getCookie('username') + ':' + msg));
+                $('#messages').prepend($('<li>').text(msg.loginID + ':' + msg.msg));
                 console.log('get messages');
             });
             

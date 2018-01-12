@@ -632,7 +632,7 @@ io.on('connection', (socket) => {
     //================チャット====================
     socket.on('chat message', (msg) => {
         //メッセージをクライアント全体に送信する
-        console.log('message: ' + msg);
+        console.log('message: ' + msg.msg);
         io.emit('chat message', msg);
     });
     //================ログイン====================
