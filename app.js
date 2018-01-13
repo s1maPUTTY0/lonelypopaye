@@ -491,11 +491,60 @@ io.on('connection', (socket) => {
     });
     socket.on('Vote',(Vote) => {
         console.log(Vote + '投票結果を受信しました。')
+        console.log(Vote.Vote_Result + '投票結果を受信しました。')
         Vote_SET(Vote).then(() => {
             DBVote_Result.find({},(err,Vote_Result) => {
                 if(Vote_Result.length % Vote.join_count == 0){
                     io.emit('Vote_display',Vote_Result);
                     console.log('投票結果を送信しました');
+                }
+            });
+        });
+    });
+    socket.on('Point_caseR', (MSF) => {
+        console.log(MSF.Smember+'ミッション成功失敗を受信しました');
+        var AllMSF = 0;
+        var AllPointS = 0;
+        var AllPointR = 0;
+        var MRPointS = 0;
+        var MRPointR = 0;
+        var MR;
+        MSF_SET(MSF).then(() => {
+            MSF_find().then((Mission_SF) => {
+                console.log('ミッションSF集計完了');
+                io.emit('Mission_Move');
+                for(var i=0;i < Mission_SF.length;i++){
+                    AllMSF += Mission_SF[i].SF
+                    if(i==Mission_SF.length-1){
+                        MR = 'ポパイ';
+                        console.log('結果はポパイが含まれた');
+                        AllPointS = Mission_SF[i].PointS;
+                        AllPointR = Mission_SF[i].PointR;
+                        var MRobj = {Mission: MSF.Mission,
+                                     Mission_Result: MR,
+                                     SPY: AllMSF,
+                                     PointS: AllPointS,
+                                     PointR: AllPointR}
+                        Mission_Result_SET(MRobj).then(() => {
+                            MR_find().then((MR) => {
+                                    io.emit('MR_display',MR);
+                                    Delete_MSF();
+                                    console.log('ミッション結果を送信しました');
+                                    for(var j=0;j < MR.length;j++){
+                                        MRPointS += MR[j].PointS;
+                                        MRPointR += MR[j].PointR;
+                                        if(j==MR.length-1){
+                                            var Point = {MRPointS: MRPointS,
+                                                         MRPointR: MRPointR};
+                                            console.log(Point.MRPointS+'スパイ結果');
+                                            console.log(Point.MRPointR+'レジ結果');
+                                            io.emit('Point',Point);
+                                        }
+                                    }
+
+                            });
+                        });
+                    }
                 }
             });
         });
@@ -553,7 +602,7 @@ io.on('connection', (socket) => {
                                                 io.emit('Point',Point);
                                             }
                                         }
-                                        
+
                                 });
                             });
                         }
@@ -562,14 +611,14 @@ io.on('connection', (socket) => {
             });
         });
     });
-    socket.on('Mission_Result',(MRobj) => {
+    /*socket.on('Mission_Result',(MRobj) => {
         Mission_Result_SET(MRobj).then(() => {
             MR_find().then((MR) => {
                     socket.emit('MR_display',MR);
                     console.log('ミッション結果を送信しました');
             });
         });
-    });
+    });*/
     socket.on('GS_Update',(GSobj) => {
         var promise = Promise.resolve();
         promise
