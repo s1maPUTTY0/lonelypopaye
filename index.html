@@ -281,59 +281,79 @@
             */
             function Smember_limit(){
                 var SL;
-                /*console.log(join_count+'SL');
-                console.log(Mission_count+'SL');*/
+                /*console.log(join_count+'SL');*/
+                console.log(Mission_count+'SLMission');
                 if(join_count<5){
                     switch(Mission_count){
                         case 1:
-                            SL=1
+                            SL=1;
+                            break;
                         case 2:
-                            SL=1
+                            SL=2;
+                            break;
                         case 3:
-                            SL=1
+                            SL=1;
+                            break;
                         case 4:
-                            SL=1
+                            SL=2;
+                            break;
                         case 5:
-                            SL=1     
+                            SL=1;
+                            break;
                     }
                 } else if(join_count>=5&&join_count<=6){
                     switch(Mission_count){
                         case 1:
-                            SL=2
-                        case 2:
+                            SL=2;
+                            break;
+                        case 2:;
                             SL=3
+                            break;
                         case 3:
-                            SL=2
+                            SL=2;
+                            break;
                         case 4:
-                            SL=3
+                            SL=3;
+                            break;
                         case 5:
-                            SL=3     
+                            SL=3;
+                            break;
                     }
                 } else if(join_count==7){
                     switch(Mission_count){
                         case 1:
-                            SL=2
+                            SL=2;
+                            break;
                         case 2:
-                            SL=3
+                            SL=3;
+                            break;
                         case 3:
-                            SL=3
+                            SL=3;
+                            break;
                         case 4:
-                            SL=4
+                            SL=4;
+                            break;
                         case 5:
-                            SL=4     
+                            SL=4;
+                            break;
                     }
                 } else if(join_count>=8){
                     switch(Mission_count){
                         case 1:
-                            SL=3
+                            SL=3;
+                            break;
                         case 2:
-                            SL=4
+                            SL=4;
+                            break;
                         case 3:
-                            SL=4
+                            SL=4;
+                            break;
                         case 4:
-                            SL=5
+                            SL=5;
+                            break;
                         case 5:
-                            SL=5     
+                            SL=5;
+                            break;
                     }
                 }
                 return SL;
