@@ -93,7 +93,7 @@
     </style>
   </head>
   <body>
-      <H1>LonelyPopaye</H1>v0.0.A2
+      <H1>LonelyPopaye</H1>v0.1.0
       <a href="note.html">リリースノート</a>
       <form action="" id="Timer">
             <button type="submit" class="submit" id="Timer">Timer Start!</button>
@@ -876,9 +876,14 @@
                         console.log('SPYは' + SPY_count + '人です');
                     }
                     if(Roll_count < SPY_count || Mission_count >= 6 || getCookie('SPY_Point')　>=　3 || getCookie('Redi_Point')　>=　3){
-                        for(var i=0;i<SPY_count;i++){
-                            $('#'+getCookie('Roll'+i)).css('color','red');
-                            console.log('SPYを再表示しました');
+                        if(Roll_count == 0){//オベロン
+                            $('#'+getCookie('Roll'+0)).css('color','red');
+                            console.log('SPY(オベロン)を表示しました')
+                        } else {
+                            for(var i=0;i<SPY_count;i++){
+                                $('#'+getCookie('Roll'+i)).css('color','red');
+                                console.log('SPYを再表示しました');
+                            }
                         }
                     }
                 }
@@ -916,7 +921,7 @@
                 if(Roll_count < SPY_count){     
                     if(Roll_count == 0){//オベロン
                         $('#' + Roll[0]._id).css('color','red');
-                        console.log(Roll[0] + 'SPYを表示しました');
+                        console.log(Roll[0] + 'SPY(オベロン)を表示しました');
                     } else {
                         for(var i=0;i<SPY_count;i++){
                             $('#' + Roll[i]._id).css('color','red');
