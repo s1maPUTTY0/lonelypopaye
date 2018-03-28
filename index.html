@@ -913,10 +913,15 @@
                     SPY_count = getCookie('SPY');
                     console.log('SPYは' + SPY_count + '人です');
                 }
-                if(Roll_count < SPY_count){                    
-                    for(var i=0;i<SPY_count;i++){
-                        $('#' + Roll[i]._id).css('color','red');
-                        console.log(Roll[i] + 'SPYを表示しました');
+                if(Roll_count < SPY_count){     
+                    if(Roll_count == 0){//オベロン
+                        $('#' + Roll[0]._id).css('color','red');
+                        console.log(Roll[0] + 'SPYを表示しました');
+                    } else {
+                        for(var i=0;i<SPY_count;i++){
+                            $('#' + Roll[i]._id).css('color','red');
+                            console.log(Roll[i] + 'SPYを表示しました');
+                        }
                     }
                 }
                 setTimeout(() => {
